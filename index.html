@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Food Access Finder — Greater Hartford</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.5; background: #f5f5f5; color: #1a1a1a; }
+    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+    header { text-align: center; margin-bottom: 24px; }
+    h1 { font-size: 1.75rem; font-weight: 600; color: #1a1a1a; }
+    .subtitle { color: #555; margin-top: 4px; font-size: 0.95rem; }
+    
+    /* Chat input area */
+    .chat-input-wrap { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .input-row { display: flex; gap: 12px; margin-bottom: 12px; }
+    #user-input { flex: 1; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+    #user-input:focus { border-color: #2563eb; }
+    #submit-btn { padding: 14px 28px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    #submit-btn:hover { background: #1d4ed8; }
+    #submit-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+    
+    .suggestion-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip { padding: 8px 14px; background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; border-radius: 20px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+    .chip:hover { background: #3730a3; color: white; }
+    
+    /* Parsed confirmation */
+    .parsed-confirm { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: none; }
+    .parsed-confirm.visible { display: block; }
+    .parsed-confirm .label { font-weight: 600; color: #166534; margin-bottom: 4px; }
+    .parsed-confirm .detail { color: #15803d; font-size: 0.95rem; }
+    .parsed-confirm .actions { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-secondary { padding: 8px 16px; background: white; color: #166534; border: 1px solid #86efac; border-radius: 6px; font-size: 0.9rem; cursor: pointer; }
+    .btn-secondary:hover { background: #f0fdf4; }
+    
+    /* Results area */
+    .results-area { display: none; }
+    .results-area.visible { display: block; }
+    .summary-banner { background: #1e293b; color: white; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; font-size: 1rem; line-height: 1.6; }
+    .results-count { font-weight: 600; color: #60a5fa; }
+    
+    .results-grid { display: grid; gap: 16px; }
+    @media (min-width: 700px) { .results-grid { grid-template-columns: 1fr 1fr; } }
+    
+    .result-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+    .result-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .result-card.expanded { grid-column: 1 / -1; }
+    
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px; border-bottom: 1px solid #f0f0f0; }
+    .card-title { font-weight: 600; font-size: 1.05rem; }
+    .card-type { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; font-weight: 600; }
+    .type-pantry { background: #dbeafe; color: #1e40af; }
+    .type-mobile_market { background: #fef3c7; color: #92400e; }
+    .type-snap_grocer { background: #dcfce7; color: #166534; }
+    
+    .card-body { padding: 16px; }
+    .info-row { display: flex; gap: 12px; margin-bottom: 8px; font-size: 0.9rem; color: #4b5563; }
+    .info-row strong { color: #1f2937; min-width: 90px; }
+    .info-icon { display: inline-flex; align-items: center; gap: 4px; }
+    
+    .score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-top: 8px; }
+    .score-high { background: #dcfce7; color: #166534; }
+    .score-medium { background: #fef3c7; color: #92400e; }
+    .score-low { background: #fee2e2; color: #991b1b; }
+    .score-closed { background: #f3f4f6; color: #6b7280; }
+    
+    .score-rationale { font-size: 0.85rem; color: #6b7280; margin-top: 6px; font-style: italic; }
+    
+    .card-actions { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid #f0f0f0; background: #fafafa; }
+    .btn-action { flex: 1; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 500; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
+    .btn-action:hover { background: #1d4ed8; }
+    .btn-action.secondary { background: white; color: #374151; border: 1px solid #d1d5db; }
+    .btn-action.secondary:hover { background: #f9fafb; }
+    
+    .expanded-content { padding: 0 16px 16px; animation: slideDown 0.2s ease; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .directions { background: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 12px; font-size: 0.9rem; line-height: 1.7; color: #374151; }
+    .directions h4 { margin-bottom: 8px; color: #1f2937; }
+    
+    .no-results { text-align: center; padding: 40px 20px; color: #6b7280; }
+    .no-results h3 { margin-bottom: 8px; color: #374151; }
+    
+    /* Loading state */
+    .loading { display: none; text-align: center; padding: 40px; color: #6b7280; }
+    .loading.visible { display: block; }
+    .spinner { width: 32px; height: 32px; border: 3px solid #e0e0e0; border-top-color: #2563eb; border-radius: 50%; margin: 0 auto 16px; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Error state */
+    .error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 16px; border-radius: 8px; margin-bottom: 16px; display: none; }
+    .error.visible { display: block; }
+    
+    /* Footer */
+    footer { text-align: center; margin-top: 40px; padding: 20px; color: #9ca3af; font-size: 0.85rem; }
+    footer a { color: #2563eb; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Food Access Finder</h1>
+      <p class="subtitle">Greater Hartford — Realistic options for car, bus, or walking</p>
+    </header>
+
+    <div class="chat-input-wrap">
+      <div class="input-row">
+        <input type="text" id="user-input" placeholder="e.g., \"I don't have a car, I'm near Park Street, I need food today\"" autocomplete="off">
+        <button id="submit-btn" type="button">Find Food</button>
+      </div>
+      <div class="suggestion-chips">
+        <span class="chip" data-prompt="I don't have a car, I'm near Park Street, I need food today">No car, Park St, today</span>
+        <span class="chip" data-prompt="I have a car, I'm in West Hartford, need food now">Car, West Hartford, now</span>
+        <span class="chip" data-prompt="Walking distance from Asylum Ave, need food this afternoon">Walking, Asylum Ave, today</span>
+        <span class="chip" data-prompt="Bus from New Britain, need groceries tomorrow morning">Bus, New Britain, tomorrow</span>
+      </div>
+    </div>
+
+    <div class="parsed-confirm" id="parsed-confirm">
+      <div class="label">I understood:</div>
+      <div class="detail" id="parsed-detail"></div>
+      <div class="actions">
+        <button class="btn-secondary" id="confirm-btn">Looks right — show results</button>
+        <button class="btn-secondary" id="correct-btn">Let me rephrase</button>
+      </div>
+    </div>
+
+    <div class="error" id="error-msg"></div>
+    <div class="loading" id="loading"><div class="spinner"></div>Finding options...</div>
+
+    <div class="results-area" id="results-area">
+      <div class="summary-banner" id="summary-banner"></div>
+      <div class="results-grid" id="results-grid"></div>
+      <div class="no-results" id="no-results" style="display:none;">
+        <h3>Nothing open right now</h3>
+        <p>We found locations but none are open at this time. Here are the earliest opening tomorrow:</p>
+        <div id="tomorrow-options"></div>
+      </div>
+    </div>
+
+    <footer>
+      Data hand-curated for Hack for Humanity 2026 · Sources: Foodshare, 211 CT, CTtransit GTFS, USDA Food Access Atlas · 
+      <a href="https://github.com/davidaripper/hackathon-DAR-Solution" target="_blank">View on GitHub</a>
+    </footer>
+  </div>
+
+  <script type="module">
+    // Import sites data
+    let sites = [];
+    async function loadSites() {
+      try {
+        const resp = await fetch('./data/sites.json');
+        sites = await resp.json();
+      } catch (e) {
+        console.error('Failed to load sites:', e);
+        showError('Could not load food site data. Please refresh.');
+      }
+    }
+    loadSites();
+
+    // DOM elements
+    const input = document.getElementById('user-input');
+    const submitBtn = document.getElementById('submit-btn');
+    const parsedConfirm = document.getElementById('parsed-confirm');
+    const parsedDetail = document.getElementById('parsed-detail');
+    const confirmBtn = document.getElementById('confirm-btn');
+    const correctBtn = document.getElementById('correct-btn');
+    const errorMsg = document.getElementById('error-msg');
+    const loading = document.getElementById('loading');
+    const resultsArea = document.getElementById('results-area');
+    const summaryBanner = document.getElementById('summary-banner');
+    const resultsGrid = document.getElementById('results-grid');
+    const noResults = document.getElementById('no-results');
+    const tomorrowOptions = document.getElementById('tomorrow-options');
+
+    let lastParsed = null;
+
+    // Suggestion chips
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        input.value = chip.dataset.prompt;
+        input.focus();
+      });
+    });
+
+    // Submit handler
+    submitBtn.addEventListener('click', handleSubmit);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSubmit(); });
+
+    function handleSubmit() {
+      const query = input.value.trim();
+      if (!query) return;
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Understanding...';
+      hideAll();
+      
+      // Simulate LLM parsing with local logic
+      setTimeout(() => {
+        const parsed = parseQuery(query);
+        lastParsed = parsed;
+        showParsed(parsed);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Find Food';
+      }, 500);
+    }
+
+    function parseQuery(query) {
+      const q = query.toLowerCase();
+      
+      // Detect transport mode
+      let transport = 'walking';
+      if (q.includes('car') || q.includes('drive') || q.includes('vehicle')) transport = 'car';
+      else if (q.includes('bus') || q.includes('transit') || q.includes('public')) transport = 'bus';
+      
+      // Detect location (simple keyword matching for demo)
+      const locations = {
+        'park street': { lat: 41.7578, lng: -72.6734, name: 'Park Street' },
+        'asylum': { lat: 41.7694, lng: -72.6923, name: 'Asylum Ave' },
+        'west hartford': { lat: 41.7624, lng: -72.7468, name: 'West Hartford' },
+        'east hartford': { lat: 41.7821, lng: -72.6123, name: 'East Hartford' },
+        'new britain': { lat: 41.6612, lng: -72.7795, name: 'New Britain' },
+        'manchester': { lat: 41.7767, lng: -72.5212, name: 'Manchester' },
+        'bloomfield': { lat: 41.8279, lng: -72.7312, name: 'Bloomfield' },
+        'downtown': { lat: 41.7658, lng: -72.6734, name: 'Downtown Hartford' },
+        'franklin': { lat: 41.7392, lng: -72.6584, name: 'Franklin Ave' },
+        'main st': { lat: 41.7658, lng: -72.6734, name: 'Main St' },
+      };
+      
+      let userLoc = locations['downtown'];
+      for (const [key, loc] of Object.entries(locations)) {
+        if (q.includes(key)) { userLoc = loc; break; }
+      }
+      
+      // Detect time
+      const now = new Date();
+      let targetDay = now.getDay(); // 0=Sun, 1=Mon...
+      let targetHour = now.getHours();
+      let targetMin = now.getMinutes();
+      let timeLabel = 'right now';
+      
+      if (q.includes('tomorrow')) {
+        targetDay = (targetDay + 1) % 7;
+        targetHour = 9; targetMin = 0;
+        timeLabel = 'tomorrow morning';
+      } else if (q.includes('morning')) {
+        targetHour = 9; targetMin = 0;
+        timeLabel = 'this morning';
+      } else if (q.includes('afternoon')) {
+        targetHour = 14; targetMin = 0;
+        timeLabel = 'this afternoon';
+      } else if (q.includes('evening')) {
+        targetHour = 18; targetMin = 0;
+        timeLabel = 'this evening';
+      } else if (q.includes('today')) {
+        timeLabel = 'today';
+      }
+      
+      return {
+        originalQuery: query,
+        transport,
+        location: userLoc,
+        targetDay,
+        targetHour,
+        targetMin,
+        timeLabel
+      };
+    }
+
+    function showParsed(parsed) {
+      const transportLabels = { car: '🚗 Driving', bus: '🚌 Bus/Transit', walking: '🚶 Walking' };
+      parsedDetail.innerHTML = `
+        <strong>Location:</strong> ${parsed.location.name}<br>
+        <strong>Transport:</strong> ${transportLabels[parsed.transport]}<br>
+        <strong>When:</strong> ${parsed.timeLabel}
+      `;
+      parsedConfirm.classList.add('visible');
+    }
+
+    confirmBtn.addEventListener('click', () => {
+      if (lastParsed) runSearch(lastParsed);
+    });
+
+    correctBtn.addEventListener('click', () => {
+      parsedConfirm.classList.remove('visible');
+      input.focus();
+    });
+
+    async function runSearch(parsed) {
+      parsedConfirm.classList.remove('visible');
+      loading.classList.add('visible');
+      resultsArea.classList.remove('visible');
+      noResults.style.display = 'none';
+      
+      // Simulate search delay
+      await new Promise(r => setTimeout(r, 800));
+      
+      const results = rankSites(sites, parsed);
+      loading.classList.remove('visible');
+      resultsArea.classList.add('visible');
+      renderResults(results, parsed);
+    }
+
+    function rankSites(sites, parsed) {
+      const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
+      const targetDayKey = dayNames[parsed.targetDay];
+      const targetMinutes = parsed.targetHour * 60 + parsed.targetMin;
+      
+      return sites.map(site => {
+        // Calculate travel time (simplified heuristic)
+        const dist = haversine(parsed.location.lat, parsed.location.lng, site.lat, site.lng);
+        let travelTime;
+        if (parsed.transport === 'car') travelTime = Math.max(5, Math.round(dist * 2.5)); // ~2.5 min/mile
+        else if (parsed.transport === 'bus') travelTime = Math.max(10, Math.round(dist * 8)); // ~8 min/mile + wait
+        else travelTime = Math.max(15, Math.round(dist * 20)); // ~20 min/mile walking
+        
+        // Check hours
+        const hoursToday = site.hours[targetDayKey];
+        let openNow = false;
+        let hoursText = 'Hours unavailable';
+        let score = 0;
+        let scoreLabel = '';
+        let scoreClass = '';
+        let rationale = '';
+        
+        if (hoursToday) {
+          const [openStr, closeStr] = hoursToday;
+          const [openH, openM] = openStr.split(':').map(Number);
+          const [closeH, closeM] = closeStr.split(':').map(Number);
+          const openMin = openH * 60 + openM;
+          const closeMin = closeH * 60 + closeM;
+          openNow = targetMinutes >= openMin && targetMinutes <= closeMin;
+          hoursText = `Open ${openStr}–${closeStr}`;
+          
+          if (openNow) {
+            if (site.verified && site.verified >= '2026-09-01') {
+              score = 95; scoreLabel = 'Likely open'; scoreClass = 'score-high';
+              rationale = 'Open per verified hours';
+            } else {
+              score = 75; scoreLabel = 'Probably open — call to confirm'; scoreClass = 'score-medium';
+              rationale = 'Open per hours but not recently verified';
+            }
+          } else {
+            score = 0; scoreLabel = 'Closed now'; scoreClass = 'score-closed';
+            rationale = `Closed at ${parsed.timeLabel} (${hoursText})`;
+          }
+        } else {
+          score = 35; scoreLabel = 'Hours unverified — call first'; scoreClass = 'score-low';
+          rationale = 'No hours data available for this day';
+          hoursText = 'Hours not listed';
+        }
+        
+        const arrivalTime = targetMinutes + travelTime;
+        const canReach = !hoursToday || (arrivalTime <= (hoursToday ? (hoursToday[1].split(':').map(Number)[0]*60 + hoursToday[1].split(':').map(Number)[1]) : Infinity));
+        
+        return {
+          ...site,
+          travelTime,
+          distance: dist,
+          openNow,
+          hoursText,
+          score,
+          scoreLabel,
+          scoreClass,
+          rationale,
+          canReach,
+          arrivalMinutes: arrivalTime
+        };
+      })
+      .filter(s => s.canReach || s.score > 0) // Show closed ones too but ranked lower
+      .sort((a, b) => {
+        // Primary: reachability (can reach before close)
+        if (a.canReach !== b.canReach) return a.canReach ? -1 : 1;
+        // Secondary: open-now score
+        if (b.score !== a.score) return b.score - a.score;
+        // Tertiary: travel time
+        return a.travelTime - b.travelTime;
+      });
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 3959; // miles
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function renderResults(results, parsed) {
+      const openResults = results.filter(r => r.score > 0 && r.canReach);
+      const closedResults = results.filter(r => r.score === 0 || !r.canReach);
+      
+      if (openResults.length === 0) {
+        summaryBanner.textContent = `No locations open ${parsed.timeLabel} that you can reach by ${parsed.transport}.`;
+        resultsGrid.innerHTML = '';
+        noResults.style.display = 'block';
+        renderTomorrowOptions(closedResults, parsed);
+        return;
+      }
+      
+      summaryBanner.innerHTML = `Found <span class="results-count">${openResults.length}</span> option${openResults.length !== 1 ? 's' : ''} you can reach ${parsed.timeLabel} by ${parsed.transport}.`;
+      noResults.style.display = 'none';
+      
+      resultsGrid.innerHTML = openResults.map((site, idx) => createCard(site, idx)).join('');
+      
+      // Add click handlers
+      document.querySelectorAll('.result-card').forEach(card => {
+        card.addEventListener('click', e => {
+          if (!e.target.closest('.btn-action')) {
+            card.classList.toggle('expanded');
+          }
+        });
+      });
+      
+      document.querySelectorAll('.btn-action.directions').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const card = e.target.closest('.result-card');
+          card.classList.toggle('expanded');
+        });
+      });
+      
+      document.querySelectorAll('.btn-action.call').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const phone = e.target.dataset.phone;
+          window.open(`tel:${phone.replace(/\D/g,'')}`, '_self');
+        });
+      });
+    }
+
+    function createCard(site, idx) {
+      return `
+        <article class="result-card" data-id="${site.id}">
+          <div class="card-header">
+            <span class="card-title">${site.name}</span>
+            <span class="card-type type-${site.type}">${site.type.replace('_',' ')}</span>
+          </div>
+          <div class="card-body">
+            <div class="info-row"><strong>Address:</strong> <span>${site.address}, ${site.town}</span></div>
+            <div class="info-row"><strong>Phone:</strong> <span>${site.phone}</span></div>
+            <div class="info-row"><strong>Hours:</strong> <span>${site.hoursText}</span></div>
+            <div class="info-row"><strong>Transit:</strong> <span>${site.transit_notes}</span></div>
+            <div class="info-row"><strong>Travel time:</strong> <span>~${site.travelTime} min by ${site.type === 'snap_grocer' ? 'car/bus' : 'bus/walk'}</span></div>
+            <div class="info-row"><strong>SNAP:</strong> <span>${site.snap_accepted ? 'Yes' : 'No'}</span></div>
+            <div class="score-badge ${site.scoreClass}">${site.scoreLabel}</div>
+            <div class="score-rationale">${site.rationale}</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-action directions" data-id="${site.id}">Directions</button>
+            <a class="btn-action call secondary" href="tel:${site.phone.replace(/\D/g,'')}" data-phone="${site.phone}">Call</a>
+          </div>
+          <div class="expanded-content" style="display:none;">
+            <div class="directions">
+              <h4>Directions from ${site.type === 'snap_grocer' ? 'your location' : 'transit stop'}</h4>
+              ${generateDirections(site)}
+              <p style="margin-top:12px; font-size:0.85rem; color:#6b7280;">
+                <strong>Notes:</strong> ${site.notes || 'No additional notes.'}
+              </p>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function generateDirections(site) {
+      const transitMap = {
+        'CTtransit 41/47': 'Take CTtransit 41 or 47 toward Hartford. Exit at Park & Main. Walk 2 min north on Park St.',
+        'CTtransit 38/39/40': 'Take CTtransit 38, 39, or 40 toward downtown. Exit at Main & Asylum. Walk 3 min east.',
+        'CTtransit 62': 'Take CTtransit 62 toward Hartford. Exit at Woodland & Homestead. Entrance is at main hospital lobby.',
+        'CTtransit 83/87': 'Take CTtransit 83 or 87 toward East Hartford. Exit at Main & Church. Pantry is on Church St.',
+        'CTtransit 61/63/65': 'Take CTtransit 61, 63, or 65 toward West Hartford. Exit at S Main & Farmington.',
+        'CTtransit 501/503': 'Take CTtransit 501 or 503 toward New Britain. Exit at Main & West Main.',
+        'CTtransit 80/82': 'Take CTtransit 80 or 82 toward Manchester. Exit at Main & Center.',
+        'CTtransit 36/52': 'Take CTtransit 36 or 52 toward Bloomfield. Exit at Park & Cottage Grove. Walk 5 min.',
+        'CTtransit 32/34': 'Take CTtransit 32 or 34 toward Franklin Ave. Exit at Franklin & Wethersfield.',
+      };
+      
+      for (const [key, dir] of Object.entries(transitMap)) {
+        if (site.transit_notes.includes(key)) return `<p>${dir}</p>`;
+      }
+      return `<p>Use your maps app for directions to ${site.address}, ${site.town}.</p>`;
+    }
+
+    function renderTomorrowOptions(closedResults, parsed) {
+      // Sort by next opening time
+      const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
+      const tomorrowDay = dayNames[(parsed.targetDay + 1) % 7];
+      
+      const withTomorrowHours = closedResults.filter(r => r.hours[tomorrowDay]).map(r => {
+        const [openStr] = r.hours[tomorrowDay];
+        return { ...r, tomorrowOpen: openStr };
+      }).sort((a,b) => a.tomorrowOpen.localeCompare(b.tomorrowOpen));
+      
+      if (withTomorrowHours.length > 0) {
+        tomorrowOptions.innerHTML = withTomorrowHours.slice(0, 5).map(site => `
+          <div style="background:white; border-radius:8px; padding:12px 16px; margin:8px auto; max-width:400px; text-align:left; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+            <strong>${site.name}</strong> (${site.town}) — Opens ${site.tomorrowOpen} · ~${site.travelTime} min by ${parsed.transport}
+          </div>
+        `).join('');
+      } else {
+        tomorrowOptions.innerHTML = '<p style="color:#9ca3af;">No hours available for tomorrow.</p>';
+      }
+    }
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.add('visible');
+    }
+
+    function hideAll() {
+      errorMsg.classList.remove('visible');
+      loading.classList.remove('visible');
+      resultsArea.classList.remove('visible');
+      parsedConfirm.classList.remove('visible');
+      noResults.style.display = 'none';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+Narrator: Hack for Humanity. Hartford. September 30th. External guide.
+
+Event details.
+
+Event: Hack for Humanity: Building with AI, Hartford Hackathon.
+
+Date: Wednesday, September 30, 2026.
+
+Time: 10 AM to 8 PM. Build ends at 4 PM, presentations at 5, awards and networking to 8 PM.
+
+Location: UConn Business School, 100 Constitution Plaza, Hartford, Connecticut.
+
+Register at luma dot com slash a-i-c dash h-a dash sept dash 3-0. Registration closed September 18th.
+
+Questions: hello at nisreencain dot com.
+
+Getting ready.
+
+Hi everyone. We're only a few days away from our first Hack for Humanity event. We're very excited to have you all join us.
+
+If you are participating as a builder or hacker: check your team assignment email and connect with your team. Don't know or have a team yet? Reach out to hello at nisreencain dot com. Make sure you have your tools ready. Check the AI Tools and Resources section.
+
+Mentors and volunteers: if you don't have your assignment yet, or you haven't connected with us, please reach out as soon as you can.
+
+We've added location and parking information to the document.
+
+Reach out if you have any questions. We're looking forward to seeing you all on Wednesday morning. See you there!
+
+What this event is.
+
+A one-day AI hackathon where multidisciplinary teams build working prototypes for real Connecticut civic challenges: things like local news deserts, food access, transit gaps, and cost of living. Teams get access to mentors, AI compute resources, and a full day of hands-on building, ending in five-minute presentations and audience voting.
+
+No prior hackathon experience is required. Beginners and experienced builders are equally welcome.
+
+Shared timeline.
+
+Now through September 18: registration open. September 18: registration deadline. September 19 to 20: team matching, participants only. Week of September 21: orientation and prep session, plus office hours. Tuesday, September 22, 11:30 AM to 1 PM. Wednesday, September 23, 1 to 2:30 PM. Thursday, September 24, noon to 1 PM. All on luma dot com. Get ready: create a GitHub account. For students, check the GitHub resources. Make sure you have the right tools and resources you need. Check out the AI Tools and Resources tab.
+
+September 29: day-before logistics email to all registrants. September 30: event day.
+
+Day-of schedule, for all roles.
+
+9:30 to 10 AM: registration and arrival. 10 to 10:30 AM: welcome, instructions, and team setup. 10:30 AM to 4 PM: active hacking and mentorship. 4 to 5 PM: break, project submission, and final prep. 5 to 7 PM: team presentations, 5 minutes each, audience voting. 7:30 PM: awards, closing remarks, and networking.
+
+Which tab is for you. Participants: joining a team to build. Volunteers: supporting event logistics on the day. Mentors: offering office hours and expertise to teams.
+
+Challenges.
+
+Challenge 1: Where Help Doesn't Reach. Theme: community building and impact, civic engagement.
+
+United Way's ALICE report identifies which Connecticut towns have the highest share of households that earn above the poverty line but still can't cover basic costs. ALICE stands for Asset Limited, Income Constrained, Employed. United Way 211 service data and CTData dot org show where social services are physically located.
+
+Teams build a tool that overlays ALICE population density against the location of assistance resources, like 211 services, food pantries, and financial counseling, to surface towns or neighborhoods underserved relative to need. Output could be a map, a gap-scoring tool, or a plain-language report a nonprofit could hand to a funder.
+
+Data sources: United Way ALICE Report, public PDF and dataset by town; CTData dot org town-level demographics; 211 CT service locator, if scrapable or public. Additional useful data: the CT Data Collaborative repositories on GitHub.
+
+Six-hour feasibility: static or lightly interactive map or dashboard using AI to summarize gaps in plain language. No live data pipeline needed.
+
+AI angle: cluster towns by need profile, generate a written gap summary per region, or build a simple chat interface for exploring the data.
+
+Challenge 2: The Last Mile of Food Access. Theme: environment, health, livability.
+
+Food insecurity in Connecticut is well documented, with Feeding America and Foodshare service area data and USDA food desert maps, but the practical barrier for many families is proximity and transit, not just availability.
+
+Teams build a tool that helps a resident or caseworker find the nearest realistic food resource, like a pantry, mobile market, or SNAP-accepting grocer, accounting for whether they have a car, rely on public transit, or are walking distance. Bonus: match hours of operation to a person's schedule.
+
+Data sources: Feeding America and Foodshare public service area data; USDA food desert and food access research atlas; CTtransit public GTFS route data; public pantry directories.
+
+Six-hour feasibility: a location-input tool returning ranked, realistic options. Can be built as a simple web app or a well-designed AI chat assistant with the data pre-loaded.
+
+AI angle: natural language input, like "I don't have a car, I'm near X"; AI-generated plain-language directions and summary; or predictive "likely to be open or stocked" scoring if hours data is inconsistent.
+
+Challenge 3: Student Life Beyond the Classroom. Theme: human connection, student life.
+
+College and high school students in Connecticut often don't know what's available to them locally: mental health resources, free events, tutoring, internships, food assistance on campus.
+
+Teams build a tool aggregating public resources for a specific student population, for example UConn Hartford, or Connecticut high schoolers generally, into one searchable or conversational interface.
+
+Data sources: university public resource pages; 211 CT; local nonprofit event listings, like Luma and Eventbrite public pages; public-edsight dot ct dot gov.
+
+Six-hour feasibility: scope to one campus or school district. Manually curate a starter dataset rather than scraping broadly.
+
+AI angle: conversational resource-finder, like "I'm stressed about money, what's available to me"; auto-categorization of scattered resources.
+
+Challenge 4: CTData dot org, Made Conversational. Theme: community building and impact, CTData dot org.
+
+CTData dot org hosts extensive town- and state-level datasets, but the interface requires knowing what you're looking for. Most residents, journalists, and small nonprofits don't have the data literacy to use it well.
+
+Teams build a natural-language interface over a subset of CTData dot org's public datasets, letting a user ask plain questions and get a chart, table, or plain-language answer.
+
+Data sources: CTData dot org public datasets, CSV or API where available.
+
+Six-hour feasibility: scope to two or three datasets, for example population, income, education, rather than the full catalog.
+
+AI angle: this challenge is the most directly AI-native: natural language query over structured data, AI-generated chart and summary output.
+
+Challenge 5: Open Category. CT Open Source Data.
+
+Have a Connecticut civic problem you want to tackle that isn't listed in the previous challenges? Choose the Open Challenge and bring your own idea, grounded in publicly available Connecticut data.
+
+Subject to organizer approval to make sure it's scoped for a one-day build.
+
+Builders and hackers.
+
+Join a multidisciplinary team to build a working solution to a real Connecticut challenge in one day. Bring your coding, product, research, design, or presentation skills. No prior hackathon experience needed.
+
+Registration. Register at luma dot com slash a-i-c dash h-a dash sept dash 3-0. Deadline: September 18, 2026.
+
+During registration, you'll be asked for: your top challenge category preferences; your superpowers, meaning your skills: AI Coding or Vibe Coding, Product Management, Market Research, User Experience Design, Presentations, Data Science, or Domain Expertise; anyone you'd like to be teamed with, if you're registering with people you already know; and your school or organization, if applicable.
+
+Space is not the constraint this year. Seven classrooms plus a full presentation hall are reserved. Come as you are: solo, with a friend, or with a full pre-formed team.
+
+Challenge categories, chosen during registration. Where Help Doesn't Reach: community building and impact, civic engagement. The Last Mile of Food Access: environment, health, livability. Student Life Beyond the Classroom: human connection, student life. CTData dot org, Made Conversational: community building and impact. Open Challenge: have a Connecticut civic problem you want to tackle that isn't on this list? Choose the Open Challenge and bring your own, pulling from any of the same themes. Subject to organizer approval to make sure it's scoped for a one-day build.
+
+Full challenge descriptions, including data sources and what a six-hour build could look like for each, are in the challenge guide.
+
+Team matching. Already have a team? Register together and let us know your teammates so you stay grouped. If you're coming solo or without a full team, we'll match you based on your superpowers and challenge preferences. You'll hear your team and challenge category by September 21. The organizers recommend teams of three to five people to split the work.
+
+Before the event. Week of September 21: orientation and prep session. Tuesday, September 22, 11:30 AM to 1 PM. Wednesday, September 23, 1 to 2:30 PM. Thursday, September 24, noon to 1 PM. All on luma dot com. September 29: you'll receive an email with arrival instructions and a reminder of what to bring.
+
+What to bring. Your own laptop and charger. Student or photo ID for check-in. Any team materials you've already prepared. Check the AI Tools and Resources for additional information about AI tooling options. You are likely to use GitHub, so try to set up your account before arriving at the hackathon to save time. For students, check the AI Tools and Resources for student access.
+
+What your team is expected to produce. By the end of the day, every team presents: a clearly articulated problem and the specific person it affects; a proposed solution with a scope realistic for one day; supporting research: user needs, existing alternatives, or relevant data; a working prototype, mockup, AI workflow, or credible product demonstration; a five-minute presentation covering all of the above, plus impact and next steps.
+
+Presentation format, five minutes per team. Problem and User, 45 seconds: what problem, for whom? Research and Insight, 45 seconds: what evidence shaped your solution? Solution and Demonstration, two minutes: show the concept, workflow, or prototype. Impact and Differentiation, one minute: why is it useful or distinctive? Next Step, 30 seconds: what would you build, test, or validate next?
+
+A slide template link will be added once created.
+
+How you'll be evaluated. Audience voting, plus structured judge feedback on: problem clarity, meaning is the problem specific, real, and well-defined; solution quality, meaning is the solution original, feasible, and well-scoped; AI effectiveness, meaning is AI used in a meaningful, intentional way; research and evidence, meaning is there user, market, or data evidence behind the approach; impact potential, meaning could this make a real difference for real people; and presentation, meaning is the story clear, compelling, and well delivered.
+
+Volunteers.
+
+Support the event on the ground: check-in, room logistics, and keeping the day running smoothly. No technical background required, just show up ready to help.
+
+What to bring. Comfortable shoes, you'll be on your feet. Your own laptop, if your role involves check-in support. A phone for coordination.
+
+Day-of role areas. Volunteers are assigned to one or more of these stations: check-in desk: greeting arrivals, confirming registration, directing people to the main room for orientation. Room logistics: supporting teams and mentors if they run into any issues. Food and refreshments: let participants know when the food arrives and where it is. Presentation support: help room captains move presentations along and cheer teams on. Wayfinding: signage and helping guests navigate 100 Constitution Plaza. Photography: capturing teams building, mentor sessions, presentations, and awards throughout the day. Consent-aware: confirm before photographing anyone and respect anyone who opts out. Photos can be uploaded to the Google Photos album linked in the document.
+
+What's expected of you. Arrive on time for your shift briefing. Stay reachable during your shift. Flag any issues, like safety, access, or Code of Conduct concerns, to your station lead or the event lead immediately. Help make the day welcoming for first-time hackathon participants.
+
+Who to contact. Volunteer lead: syanicke at gmail dot com. Event host: hello at nisreencain dot com.
+
+Mentors.
+
+Serve as a domain expert available for team office hours during build time: product, design, engineering, AI, or another practice area. Guide teams on their problem, technical approach, or presentation, then join for final presentations.
+
+What to bring. Your own laptop, if useful for your mentoring style. Nothing else required. Your expertise is the contribution.
+
+How mentoring works on the day. See the day-of schedule in the overview section.
+
+10:30 AM to 4 PM, build time: hold office hours, circulating among teams to answer questions and give feedback. You're not assigned to a single team for the full day unless you prefer that. Teams can seek you out based on the expertise you registered with, or organizers may point specific teams your way.
+
+4 to 5 PM: optional, help teams finalize their presentations. 5 to 7 PM: attend team presentations.
+
+You're welcome to stay for the full day or just your available window. Let us know your availability at registration so we can set expectations with teams.
+
+What's expected of you. Ask good questions rather than solving the problem for teams. The goal is to sharpen their thinking, not do the work. Be available and visible during your committed window. Give honest, constructive feedback, especially as teams prepare to present. Flag any Code of Conduct concerns to the event lead immediately.
+
+Who to contact. General questions before and during the event: hello at nisreencain dot com.
+
+AI Tools and Resources.
+
+One. AI Assistants, claim individually.
+
+Google Gemini, AI Pro: one year free for US students, about twenty dollars a month value. Four times usage limits, five terabytes storage, Gemini Spark agent, Gemini Omni. Claim at gemini dot google dot com slash students, with a personal Google account, by December 31, 2026.
+
+ChatGPT Plus: four free monthly billing periods, back-to-school offer. Claim at chatgpt dot com slash students with a dot-edu email, by October 31, 2026.
+
+Claude: no individual student discount exists. Free tier, with Projects and Artifacts, is the baseline. About fifty dollars in API credits available via Anthropic's Student Builders program, application required. Free tier needs no signup. For Student Builders, apply directly with Anthropic.
+
+Two. Coding assistants.
+
+GitHub Copilot. Free tier: two thousand completions a month, no card required. New student Pro signups paused since April 2026 due to compute demand. Anyone not already verified gets Copilot Free.
+
+Cursor. Free Hobby plan, with Composer and limited agent requests, for everyone. The free twelve-month Pro-for-students program ended June 25, 2026. Graduate students, researchers, and educators can still request credits directly via Cursor's form.
+
+JetBrains AI Assistant. IDEs, including IntelliJ Ultimate, PyCharm Pro, and WebStorm, free via the Student Pack, renewed annually. The AI Assistant itself: free tier capped at three credits a month, plus unlimited Mellum code completions.
+
+Kiro, from AWS. Free tier: fifty credits a month, no card required, includes Claude Sonnet 4.5. Students at one hundred thirty-two participating universities across eighteen countries: one thousand credits a month free for one year. It's a spec-driven agentic IDE that writes requirements and design docs before code, built on Code OSS, includes a CLI. Student verification via SheerID plus a university email at kiro dot dev slash students. Check if your school is on the list before assuming eligibility.
+
+Claude Code. No dedicated student discount. Access tiers: Free, limited; Pro, twenty dollars a month; Max, one hundred to two hundred dollars a month, five to twenty times usage; or pay-as-you-go API. It's an agentic coding tool that runs in the terminal, not an IDE plugin. Good fit for students already comfortable with a command line. Same no-individual-student-price situation as Claude's chat product.
+
+OpenAI Codex, CLI. Bundled into every ChatGPT plan including Free. Works today with just a ChatGPT sign-in. Plus, at twenty dollars a month, unlocks it across web, CLI, IDE extension, and iOS with higher limits. No separate student pricing, but the Free tier is genuinely usable for light tasks. Billing moved to token-based credits in April 2026.
+
+Three. GitHub Student Developer Pack.
+
+The single best starting point. Apply with a dot-edu email to unlock most of what's listed below. Over seven hundred dollars in value, free while enrolled. Includes GitHub Pro, the JetBrains suite, Azure credits, MongoDB Atlas credits, domain registration, and dozens of partner tools. Apply at education dot github dot com slash pack.
+
+Four. Cloud credits.
+
+AWS Educate: up to one hundred dollars in credits, twelve months, renewable while enrolled. The amount may be lower if your school isn't an AWS Educate institutional member. Check individually.
+
+AWS Free Tier: two hundred dollars in usage credits over the first six months, plus permanent always-free services like Lambda, DynamoDB, and CloudWatch limits that never expire. Separate from AWS Educate. New accounts get this automatically.
+
+Azure for Students: one hundred dollar credit, twelve months, no credit card required, renewable annually. Verify with a dot-edu email at azure dot microsoft dot com slash free slash students.
+
+Google Cloud Free Trial: three hundred dollars in credits, ninety days, plus access to the always-free tier on more than twenty products. Automatic for any new account, student or not, no dot-edu required, at cloud dot google dot com slash free.
+
+Google Cloud for Education, students: two hundred free Google Skills credits for hands-on labs and skill badges, expiring one year after issuance. Additional GCP billing credits, often around fifty dollars, available only if a faculty member has requested them for a specific course. Skills credits: self-serve at cloud dot google dot com slash edu slash students. Billing credits: instructor-initiated, not something a student can request alone. Ask your professor if the course has this set up.
+
+FAQ.
+
+Intellectual property and ownership. Do participants retain ownership of ideas, research, designs, code, and other materials they create before and during the hackathon? Neither AI Collective, nor its hosts, nor partners or sponsors, nor the organizers make any claim for any IP created for the event. It is up to team participants to decide on IP ownership going forward.
+
+Does the organizer or any sponsor or partner receive a license or other rights to participant submissions? There are no licensing claims of any kind on materials created.
+
+Will presentations or demonstrations be recorded, photographed, published, or otherwise shared publicly? There are no plans to stream the event. We don't plan to record the presentations. Photos and short videos will be taken for promotional purposes. Your attendance represents an opt-in to those photos.
+
+Participants and audience may take photos and videos during the event. This is a public event. Neither the AI Collective nor its hosts has any control over that.
+
+Is there a participant agreement or written intellectual-property policy to review? Refer to the IP rules section of this document.
+
+Presentation format. Is the five-minute presentation inclusive of the product demonstration? Yes. There is a total of five minutes per team to present and demo. You and your team will decide how to split time between presentation and demo.
+
+Will there be a separate question-and-answer period? Yes. There is a separate Q and A and feedback session, two to three minutes in length, depending on the schedule that evening.
+
+May more than one team member participate, or should one person present? That is up to you, though organizers have found that transition time between presenters could eat up valuable seconds.
+
+Are slides required, and must they be submitted in advance or in a particular format? Slides are encouraged, and there is a template in the presentation folder of the Playbook.
+
+What audiovisual equipment and internet access will be available? The University of Connecticut has free public WiFi and an audio and video system.
+
+Judging and recognition. There will be swag and prizes throughout the event. Will there be one overall winner or first, second, and third place recognition? The top three will be recognized. The top vote-getter is the only one with actual prizes. Will winners be selected by judges, audience voting, or a combination? Judges only. Are there prizes, awards, or other forms of recognition? Free mentoring from a startup accelerator will be provided to the top team, if they plan to proceed. There will be other prizes and swag for participants and winners. More details coming soon. Are there any tie-breaking criteria beyond the judging rubric? Judges will determine the final rankings.
+
+What happens after the event. Will teams receive written or verbal feedback from the judges? Judges' scores will be provided. Additional feedback is at the discretion of the judges. Are there opportunities for continued mentorship, incubation, introductions, or follow-up support? There will be mentoring for the winning team. All participants are invited to AI Collective Hartford events, which also include Vibin' Out sessions, Demo Nights, and monthly talks, plus other events where you can meet and connect with mentors and AI practitioners. Will any of the projects be featured through UConn, the AI Collective, or event partners? All participants are invited to subsequent AI Collective demo days across the state: Stamford, Hartford, and New Haven.
+
+IP Rules. AI Collective Hackathon core intellectual property rules.
+
+Participant ownership: you and your team own one hundred percent of the intellectual property you create.
+
+No organizer claims: event organizers, sponsors, and partners do not take ownership or commercial exploitation rights over your project.
+
+Open source and portfolios: you are free to choose any license for your project, publish it in public repositories, and use it in your personal CV or portfolio.
+
+Original work warranty: you must warrant that your submission is your original work and does not infringe on any third-party patents, copyrights, or trademarks.
+
+Public presentation: understand that you are making a public presentation and that the organizers have no control over the people in the audience. If you truly have some protectable IP, simply do not mention that in your presentation.
+
+Location, parking, directions.
+
+Location: UConn School of Business, Downtown Hartford. 100 Constitution Plaza, Hartford, Connecticut.
+
+Registration is on the second floor. The building security desk and volunteers will direct you to the registration table.
+
+Parking. Parking is available at Constitution Plaza North, 100 Kinsley Street, and Constitution Plaza South, 109 Kinsley Street. Please note: particularly in the Constitution Plaza North garage, most parking is available by accessing lower levels from the street. Follow arrows down to Levels 3, 2, and 1 upon entrance. Overflow parking: Morgan Street Garage, 55 Morgan Street South, Hartford, Connecticut 06103. There are also several other paid parking lots and garages within walking distance of the building, shown on the map in the document, if the main options are full.
+
+Additional details and directions to the building are at the UConn business school's Hartford directions page.
+
+End of guide.
