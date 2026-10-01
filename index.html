@@ -277,12 +277,10 @@
       btn.addEventListener('click', () => {
         const filter = btn.dataset.filter;
         const value = btn.dataset.value;
-        // Deselect siblings in same row
         btn.closest('.filter-row').querySelectorAll('.filter-btn').forEach(b => {
           b.classList.remove('selected');
           b.setAttribute('aria-pressed', 'false');
         });
-        // Select this one
         btn.classList.add('selected');
         btn.setAttribute('aria-pressed', 'true');
         currentFilters[filter] = value;
@@ -298,12 +296,10 @@
     gpsBtn.addEventListener('click', toggleGPS);
 
     function toggleGPS() {
-      // If already active, clear location
       if (gpsBtn.classList.contains('active') && userLocation) {
         clearLocation();
         return;
       }
-      // Otherwise request GPS
       requestGPS();
     }
 
@@ -320,9 +316,7 @@
       locationStatus.classList.remove('visible');
       locationStatus.classList.remove('fallback');
       locationText.textContent = 'Tap the map to set your location, or use GPS';
-      // Reset map to Hartford center
       if (map) map.setView([41.7658, -72.6734], 12);
-      // Clear any results
       hideAll();
     }
 
@@ -393,7 +387,12 @@
       submitBtn.disabled = true;
       submitBtn.textContent = 'Understanding…';
       hideAll();
-      setTimeout(() => { const parsed = parseQuery(query); showParsed(parsed); submitBtn.disabled = false; submitBtn.textContent = 'Find Food'; }, 400);
+      setTimeout(() => {
+        const parsed = parseQuery(query);
+        showParsed(parsed);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Find Food';
+      }, 400);
     }
 
     confirmBtn.addEventListener('click', () => { if (lastParsed) runSearch(lastParsed); });
@@ -403,18 +402,15 @@
 
     function parseQuery(query) {
       const q = query.toLowerCase();
-      // Start with filter selections, but allow text to override
       let transport = currentFilters.transport;
       let when = currentFilters.when;
       let payment = currentFilters.payment;
 
-      // Text overrides for transport
       if (/\bcar\b|\bdrive\b|\bvehicle\b|i have a car/i.test(q)) transport = 'car';
       else if (/\bbus\b|\btransit\b|\bpublic\b|take the\s+/i.test(q)) transport = 'bus';
       else if (/\bwalk\b|\bwalking\b/i.test(q)) transport = 'walking';
       else if (/\bbike\b|\bbicycle\b/i.test(q)) transport = 'bike';
 
-      // Named locations
       const namedLocations = {
         'park street': { lat: 41.7578, lng: -72.6734, name: 'Park Street' },
         'asylum': { lat: 41.7694, lng: -72.6923, name: 'Asylum Ave' },
@@ -433,7 +429,6 @@
       let detectedName = null;
       for (const [key, loc] of Object.entries(namedLocations)) { if (q.includes(key)) { detectedName = loc.name; break; } }
 
-      // Time overrides
       const now = new Date();
       const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
       let targetDay = now.getDay(), targetHour = now.getHours(), targetMin = now.getMinutes(), timeLabel = 'right now';
@@ -446,13 +441,13 @@
     }
 
     function showParsed(parsed) {
-          lastParsed = parsed;
-          const transportLabels = { car: '🚗 Driving', bus: '🚌 Bus/Transit', walking: '🚶 Walking', bike: '🚲 Bike' };
-          const whenLabels = { now: 'Right now', morning: 'This morning', afternoon: 'This afternoon', evening: 'This evening', tomorrow: 'Tomorrow morning' };
-          const paymentLabels = { cash: 'Cash', card: 'Credit card', debit: 'Debit', snap: 'SNAP/EBT' };
-          parsedDetail.innerHTML = `<strong>Location:</strong> ${parsed.detectedName || 'Your current location'}<br><strong>Transport:</strong> ${transportLabels[parsed.transport]}<br><strong>When:</strong> ${whenLabels[parsed.when]}<br><strong>Payment/Access:</strong> ${paymentLabels[parsed.payment]}`;
-          parsedConfirm.classList.add('visible');
-        }
+      lastParsed = parsed;
+      const transportLabels = { car: '🚗 Driving', bus: '🚌 Bus/Transit', walking: '🚶 Walking', bike: '🚲 Bike' };
+      const whenLabels = { now: 'Right now', morning: 'This morning', afternoon: 'This afternoon', evening: 'This evening', tomorrow: 'Tomorrow morning' };
+      const paymentLabels = { cash: 'Cash', card: 'Credit card', debit: 'Debit', snap: 'SNAP/EBT' };
+      parsedDetail.innerHTML = `<strong>Location:</strong> ${parsed.detectedName || 'Your current location'}<br><strong>Transport:</strong> ${transportLabels[parsed.transport]}<br><strong>When:</strong> ${whenLabels[parsed.when]}<br><strong>Payment/Access:</strong> ${paymentLabels[parsed.payment]}`;
+      parsedConfirm.classList.add('visible');
+    }
 
     async function runSearch(parsed) {
       parsedConfirm.classList.remove('visible');
@@ -460,7 +455,6 @@
       resultsArea.classList.remove('visible');
       tomorrowSection.classList.remove('visible');
       filteredOut.classList.remove('visible');
-      // Map stays visible; we just update markers
       await new Promise(r => setTimeout(r, 600));
       const { todayResults, filteredOutResults, tomorrowCandidates, noResultsReason } = rankAndScore(sites, parsed);
       loading.classList.remove('visible');
@@ -494,11 +488,9 @@
       todayResults.sort((a, b) => { if (b.score !== a.score) return b.score - a.score; return a.travelTime - b.travelTime; });
       tomorrowCandidates.sort((a, b) => a.tomorrowOpen.localeCompare(b.tomorrowOpen));
 
-      // Determine why no results
       if (todayResults.length === 0 && filteredOutResults.length === 0 && tomorrowCandidates.length === 0) {
         noResultsReason = 'No food access sites in database for this area.';
       } else if (todayResults.length === 0) {
-        // Check what filtered everything out
         const closedCount = filteredOutResults.filter(r => r.rationale?.includes('Closed today')).length;
         const unverifiedCount = filteredOutResults.filter(r => r.rationale?.includes('unverified')).length;
         if (closedCount > 0 && unverifiedCount === 0) {
@@ -530,7 +522,6 @@
     }
 
     function renderResults(todayResults, filteredOutResults, tomorrowCandidates, parsed, noResultsReason) {
-      // Show explanation card if no results at all
       if (noResultsReason) {
         resultsArea.classList.add('visible');
         summaryBanner.innerHTML = `No locations open ${parsed.timeLabel} reachable by ${parsed.transport}.`;
@@ -540,7 +531,6 @@
             <p>${noResultsReason}</p>
             <div class="detail">Showing all sites sorted by distance regardless of hours.</div>
           </div>`;
-        // Show ALL sites sorted by distance as fallback
         const allResults = [...todayResults, ...filteredOutResults].sort((a, b) => a.distance - b.distance);
         if (allResults.length > 0) {
           resultsList.innerHTML += allResults.map((site, idx) => createCard(site, idx + 1)).join('');
@@ -640,7 +630,6 @@
     function launchGoogleMaps(site, transportMode, mode) { window.open(buildGoogleMapsUrl(site, transportMode, mode), '_blank'); }
 
     function plotResultsOnMap(todayResults) {
-      // Clear previous site markers
       siteMarkers.forEach(({ marker }) => map.removeLayer(marker));
       siteMarkers = [];
       if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
@@ -703,7 +692,6 @@
       filteredOut.classList.remove('visible');
       parsedConfirm.classList.remove('visible');
       emptyState.style.display = 'none';
-      // Map stays visible
     }
 
     document.addEventListener('DOMContentLoaded', () => { initMap(); });
