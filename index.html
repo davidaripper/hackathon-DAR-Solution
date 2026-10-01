@@ -3,112 +3,150 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Food Access Finder — Greater Hartford</title>
+  <title>Fresh Route — Ask Naturally. Get There Relibly.</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
+    :root {
+      --bg: #fcf9f4; --card-bg: #ffffff; --text: #1a1a1a; --text-muted: #6b6560;
+      --accent: #b07d5a; --accent-dark: #9a6b4a; --terracotta: #c46a3d;
+      --green: #2d6a4f; --gold: #c9a227; --shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-hover: 0 8px 24px rgba(0,0,0,0.12); --radius: 16px; --radius-sm: 10px;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.5; background: #f5f5f5; color: #1a1a1a; }
-    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
-    header { text-align: center; margin-bottom: 24px; }
-    h1 { font-size: 1.75rem; font-weight: 600; color: #1a1a1a; }
-    .subtitle { color: #555; margin-top: 4px; font-size: 0.95rem; }
-    
-    /* Chat input area */
-    .chat-input-wrap { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
-    .input-row { display: flex; gap: 12px; margin-bottom: 12px; }
-    #user-input { flex: 1; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; outline: none; transition: border-color 0.2s; }
-    #user-input:focus { border-color: #2563eb; }
-    #submit-btn { padding: 14px 28px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-    #submit-btn:hover { background: #1d4ed8; }
-    #submit-btn:disabled { background: #93c5fd; cursor: not-allowed; }
-    
-    .suggestion-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip { padding: 8px 14px; background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; border-radius: 20px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
-    .chip:hover { background: #3730a3; color: white; }
-    
-    /* Parsed confirmation */
-    .parsed-confirm { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: none; }
+    body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; line-height: 1.5; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+    .container { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+    header { text-align: center; margin-bottom: 24px; padding-top: 8px; }
+    .brand-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 6px; }
+    .brand-logo { width: 38px; height: 38px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: white; letter-spacing: -0.5px; }
+    h1 { font-size: 1.65rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+    .tagline { color: var(--text-muted); font-size: 0.95rem; margin-top: 2px; font-style: italic; }
+    .accent-bar { height: 3px; background: var(--accent); border-radius: 2px; width: 60px; margin: 10px auto 0; }
+    .search-section { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 20px; }
+    .search-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    #user-input { flex: 1; padding: 14px 16px; border: 2px solid #e0d8cc; border-radius: var(--radius-sm); font-size: 1rem; outline: none; background: var(--bg); color: var(--text); font-family: inherit; transition: border-color 0.2s; }
+    #user-input:focus { border-color: var(--accent); }
+    #gps-btn { padding: 14px 12px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; transition: background 0.2s; white-space: nowrap; font-family: inherit; }
+    #gps-btn:hover { background: var(--accent-dark); }
+    #gps-btn.active { background: var(--green); }
+    #submit-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; font-family: inherit; }
+    #submit-btn:hover { background: var(--accent-dark); }
+    #submit-btn:disabled { background: #c4b5a5; cursor: not-allowed; }
+    .suggestion-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .chip { padding: 8px 14px; background: #f0ece4; color: var(--accent-dark); border: 1px solid #e0d8cc; border-radius: 20px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+    .chip:hover { background: var(--accent); color: white; border-color: var(--accent); }
+    .location-status { display: none; align-items: center; gap: 8px; padding: 10px 14px; background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: var(--radius-sm); margin-bottom: 12px; font-size: 0.9rem; color: var(--green); font-weight: 500; }
+    .location-status.visible { display: flex; }
+    .location-status .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .location-status.fallback { background: #fff8e1; border-color: #ffcc80; color: #e65100; }
+    .parsed-confirm { background: #f5f0eb; border: 1px solid #e0d8cc; border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 16px; display: none; }
     .parsed-confirm.visible { display: block; }
-    .parsed-confirm .label { font-weight: 600; color: #166534; margin-bottom: 4px; }
-    .parsed-confirm .detail { color: #15803d; font-size: 0.95rem; }
-    .parsed-confirm .actions { display: flex; gap: 8px; margin-top: 10px; }
-    .btn-secondary { padding: 8px 16px; background: white; color: #166534; border: 1px solid #86efac; border-radius: 6px; font-size: 0.9rem; cursor: pointer; }
-    .btn-secondary:hover { background: #f0fdf4; }
-    
-    /* Results area */
+    .parsed-confirm .label { font-weight: 600; color: var(--accent-dark); margin-bottom: 6px; font-size: 0.9rem; }
+    .parsed-confirm .detail { color: var(--text); font-size: 0.95rem; line-height: 1.6; }
+    .parsed-confirm .actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-secondary { padding: 8px 16px; background: white; color: var(--accent-dark); border: 1px solid #d4c8bc; border-radius: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; font-family: inherit; }
+    .btn-secondary:hover { background: #f5f0eb; }
+    .loading { display: none; text-align: center; padding: 40px 20px; color: var(--text-muted); }
+    .loading.visible { display: block; }
+    .spinner { width: 32px; height: 32px; border: 3px solid #e0d8cc; border-top-color: var(--accent); border-radius: 50%; margin: 0 auto 16px; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .results-area { display: none; }
     .results-area.visible { display: block; }
-    .summary-banner { background: #1e293b; color: white; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; font-size: 1rem; line-height: 1.6; }
-    .results-count { font-weight: 600; color: #60a5fa; }
-    
-    .results-grid { display: grid; gap: 16px; }
-    @media (min-width: 700px) { .results-grid { grid-template-columns: 1fr 1fr; } }
-    
-    .result-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
-    .result-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
-    .result-card.expanded { grid-column: 1 / -1; }
-    
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px; border-bottom: 1px solid #f0f0f0; }
-    .card-title { font-weight: 600; font-size: 1.05rem; }
-    .card-type { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; font-weight: 600; }
-    .type-pantry { background: #dbeafe; color: #1e40af; }
-    .type-mobile_market { background: #fef3c7; color: #92400e; }
-    .type-snap_grocer { background: #dcfce7; color: #166534; }
-    
-    .card-body { padding: 16px; }
-    .info-row { display: flex; gap: 12px; margin-bottom: 8px; font-size: 0.9rem; color: #4b5563; }
-    .info-row strong { color: #1f2937; min-width: 90px; }
-    .info-icon { display: inline-flex; align-items: center; gap: 4px; }
-    
-    .score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-top: 8px; }
-    .score-high { background: #dcfce7; color: #166534; }
-    .score-medium { background: #fef3c7; color: #92400e; }
-    .score-low { background: #fee2e2; color: #991b1b; }
-    .score-closed { background: #f3f4f6; color: #6b7280; }
-    
-    .score-rationale { font-size: 0.85rem; color: #6b7280; margin-top: 6px; font-style: italic; }
-    
-    .card-actions { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid #f0f0f0; background: #fafafa; }
-    .btn-action { flex: 1; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 500; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s; }
-    .btn-action:hover { background: #1d4ed8; }
-    .btn-action.secondary { background: white; color: #374151; border: 1px solid #d1d5db; }
-    .btn-action.secondary:hover { background: #f9fafb; }
-    
+    .summary-banner { background: var(--text); color: white; border-radius: var(--radius-sm); padding: 14px 18px; margin-bottom: 16px; font-size: 0.95rem; line-height: 1.5; }
+    .summary-banner .count { font-weight: 700; color: #f0c75e; }
+    .results-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .result-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+    .result-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+    .result-card.expanded { box-shadow: var(--shadow-hover); }
+    .card-top { display: flex; align-items: flex-start; padding: 16px; gap: 12px; }
+    .rank-badge { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: white; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .card-main { flex: 1; min-width: 0; }
+    .card-title { font-weight: 600; font-size: 1.05rem; color: var(--text); margin-bottom: 2px; }
+    .card-subtitle { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+    .card-details { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 0.9rem; color: var(--text); margin-bottom: 8px; }
+    .card-details .detail-item { display: flex; align-items: center; gap: 4px; }
+    .card-details .detail-item strong { color: var(--text-muted); font-weight: 500; }
+    .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .score-badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; white-space: nowrap; font-family: inherit; }
+    .score-high { background: var(--green); color: white; }
+    .score-medium { background: var(--gold); color: white; }
+    .score-low { background: var(--terracotta); color: white; }
+    .score-closed { background: #8a8580; color: white; }
+    .score-rationale { font-size: 0.8rem; color: var(--text-muted); font-style: italic; text-align: right; line-height: 1.4; }
+    .card-actions { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid #f0ece4; background: #faf8f4; }
+    .btn-action { flex: 1; padding: 10px; border: none; border-radius: 6px; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.2s; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 5px; font-family: inherit; }
+    .btn-directions { background: var(--accent); color: white; }
+    .btn-directions:hover { background: var(--accent-dark); }
+    .btn-detail { background: white; color: var(--accent-dark); border: 1px solid #d4c8bc; }
+    .btn-detail:hover { background: #f5f0eb; }
     .expanded-content { padding: 0 16px 16px; animation: slideDown 0.2s ease; }
-    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    .directions { background: #f8fafc; border-radius: 8px; padding: 16px; margin-top: 12px; font-size: 0.9rem; line-height: 1.7; color: #374151; }
-    .directions h4 { margin-bottom: 8px; color: #1f2937; }
-    
-    .no-results { text-align: center; padding: 40px 20px; color: #6b7280; }
-    .no-results h3 { margin-bottom: 8px; color: #374151; }
-    
-    /* Loading state */
-    .loading { display: none; text-align: center; padding: 40px; color: #6b7280; }
-    .loading.visible { display: block; }
-    .spinner { width: 32px; height: 32px; border: 3px solid #e0e0e0; border-top-color: #2563eb; border-radius: 50%; margin: 0 auto 16px; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    
-    /* Error state */
-    .error { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 16px; border-radius: 8px; margin-bottom: 16px; display: none; }
-    .error.visible { display: block; }
-    
-    /* Footer */
-    footer { text-align: center; margin-top: 40px; padding: 20px; color: #9ca3af; font-size: 0.85rem; }
-    footer a { color: #2563eb; text-decoration: none; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    .expanded-details { background: #faf8f4; border-radius: var(--radius-sm); padding: 14px 16px; font-size: 0.9rem; color: var(--text); line-height: 1.6; }
+    .expanded-details h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 8px; }
+    .expanded-details .note { color: var(--text-muted); font-style: italic; }
+    .filtered-out { background: #f5f0eb; border: 1px solid #e0d0c0; border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 16px; display: none; }
+    .filtered-out.visible { display: block; }
+    .filtered-out .label { font-weight: 700; color: var(--terracotta); text-transform: uppercase; font-size: 0.78rem; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .filtered-out .explanation { font-size: 0.9rem; color: var(--text); line-height: 1.5; }
+    .filtered-out .explanation strong { color: var(--accent-dark); }
+    .tomorrow-section { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 20px; display: none; }
+    .tomorrow-section.visible { display: block; }
+    .tomorrow-label { font-weight: 700; color: var(--accent-dark); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.1em; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
+    .tomorrow-list { display: flex; flex-direction: column; gap: 10px; }
+    .tomorrow-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #faf8f4; border-radius: var(--radius-sm); font-size: 0.9rem; }
+    .tomorrow-item .time { font-weight: 600; color: var(--accent-dark); min-width: 80px; }
+    .tomorrow-item .name { font-weight: 500; flex: 1; }
+    .tomorrow-item .eta { color: var(--text-muted); font-size: 0.85rem; }
+    .map-section { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; display: none; }
+    .map-section.visible { display: block; }
+    #map { height: 300px; width: 100%; border-radius: var(--radius-sm); z-index: 1; }
+    .map-legend { padding: 10px 14px; font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 16px; flex-wrap: wrap; border-top: 1px solid #f0ece4; background: #faf8f4; }
+    .map-legend .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .legend-dot.user { background: #2563eb; }
+    .legend-dot.high { background: var(--green); }
+    .legend-dot.medium { background: var(--gold); }
+    .legend-dot.low { background: var(--terracotta); }
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+    .empty-state h3 { color: var(--text); margin-bottom: 8px; font-size: 1.1rem; }
+    footer { text-align: center; margin-top: 32px; padding: 20px 0 10px; color: var(--text-muted); font-size: 0.8rem; line-height: 1.6; border-top: 1px solid #e8e4de; }
+    footer a { color: var(--accent-dark); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
+    @media (max-width: 480px) {
+      .container { padding: 12px 10px 30px; }
+      h1 { font-size: 1.4rem; }
+      .search-section { padding: 16px; }
+      .search-row { flex-direction: column; }
+      #gps-btn { width: 100%; justify-content: center; }
+      .card-top { flex-direction: column; gap: 8px; }
+      .rank-badge { align-self: flex-start; }
+      .card-right { flex-direction: row; align-items: center; }
+      .score-rationale { text-align: left; margin-top: 4px; }
+      #map { height: 220px; }
+      .card-actions { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>Food Access Finder</h1>
-      <p class="subtitle">Greater Hartford — Realistic options for car, bus, or walking</p>
-    </header>
-
-    <div class="chat-input-wrap">
-      <div class="input-row">
-        <input type="text" id="user-input" placeholder="e.g., \"I don't have a car, I'm near Park Street, I need food today\"" autocomplete="off">
-        <button id="submit-btn" type="button">Find Food</button>
+      <div class="brand-row">
+        <div class="brand-logo">FR</div>
+        <h1>Fresh Route</h1>
       </div>
+      <p class="tagline">Ask naturally. Get there reliably.</p>
+      <div class="accent-bar"></div>
+    </header>
+    <div class="location-status" id="location-status">
+      <span class="dot"></span>
+      <span id="location-text">Using your current location</span>
+    </div>
+    <div class="search-section">
+      <div class="search-row">
+        <input type="text" id="user-input" placeholder="e.g., I don't have a car, I'm near Park Street, I need food today" autocomplete="off">
+        <button id="gps-btn" type="button"><span class="icon">📍</span> Use my location</button>
+      </div>
+      <button id="submit-btn" type="button">Find Food</button>
       <div class="suggestion-chips">
         <span class="chip" data-prompt="I don't have a car, I'm near Park Street, I need food today">No car, Park St, today</span>
         <span class="chip" data-prompt="I have a car, I'm in West Hartford, need food now">Car, West Hartford, now</span>
@@ -116,7 +154,6 @@
         <span class="chip" data-prompt="Bus from New Britain, need groceries tomorrow morning">Bus, New Britain, tomorrow</span>
       </div>
     </div>
-
     <div class="parsed-confirm" id="parsed-confirm">
       <div class="label">I understood:</div>
       <div class="detail" id="parsed-detail"></div>
@@ -125,97 +162,155 @@
         <button class="btn-secondary" id="correct-btn">Let me rephrase</button>
       </div>
     </div>
-
-    <div class="error" id="error-msg"></div>
-    <div class="loading" id="loading"><div class="spinner"></div>Finding options...</div>
-
+    <div class="loading" id="loading"><div class="spinner"></div>Finding reachable options…</div>
+    <div class="filtered-out" id="filtered-out">
+      <div class="label">Filtered out</div>
+      <div class="explanation" id="filtered-explanation"></div>
+    </div>
     <div class="results-area" id="results-area">
       <div class="summary-banner" id="summary-banner"></div>
-      <div class="results-grid" id="results-grid"></div>
-      <div class="no-results" id="no-results" style="display:none;">
-        <h3>Nothing open right now</h3>
-        <p>We found locations but none are open at this time. Here are the earliest opening tomorrow:</p>
-        <div id="tomorrow-options"></div>
+      <div class="results-list" id="results-list"></div>
+    </div>
+    <div class="tomorrow-section" id="tomorrow-section">
+      <div class="tomorrow-label">Tomorrow / Plan Ahead</div>
+      <div class="tomorrow-list" id="tomorrow-list"></div>
+    </div>
+    <div class="map-section" id="map-section">
+      <div id="map"></div>
+      <div class="map-legend">
+        <span class="legend-item"><span class="legend-dot user"></span> Your location</span>
+        <span class="legend-item"><span class="legend-dot high"></span> Likely open (90–100)</span>
+        <span class="legend-item"><span class="legend-dot medium"></span> Probably open (60–89)</span>
+        <span class="legend-item"><span class="legend-dot low"></span> Call first (30–59)</span>
       </div>
     </div>
-
+    <div class="empty-state" id="empty-state" style="display:none;">
+      <h3>No location set</h3>
+      <p>Use your GPS or tap the map to set your starting point, then search.</p>
+    </div>
     <footer>
-      Data hand-curated for Hack for Humanity 2026 · Sources: Foodshare, 211 CT, CTtransit GTFS, USDA Food Access Atlas · 
+      Fresh Route — Hack for Humanity 2026<br>
+      Data: Foodshare, 211 CT, CTtransit GTFS, USDA Food Access Research Atlas, OSM<br>
       <a href="https://github.com/davidaripper/hackathon-DAR-Solution" target="_blank">View on GitHub</a>
     </footer>
   </div>
-
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module">
-    // Import sites data
     let sites = [];
-    async function loadSites() {
-      try {
-        const resp = await fetch('./data/sites.json');
-        sites = await resp.json();
-      } catch (e) {
-        console.error('Failed to load sites:', e);
-        showError('Could not load food site data. Please refresh.');
-      }
-    }
-    loadSites();
-
-    // DOM elements
+    let userLocation = null;
+    let map = null;
+    let userMarker = null;
+    let routeLine = null;
     const input = document.getElementById('user-input');
     const submitBtn = document.getElementById('submit-btn');
+    const gpsBtn = document.getElementById('gps-btn');
+    const locationStatus = document.getElementById('location-status');
+    const locationText = document.getElementById('location-text');
     const parsedConfirm = document.getElementById('parsed-confirm');
     const parsedDetail = document.getElementById('parsed-detail');
     const confirmBtn = document.getElementById('confirm-btn');
     const correctBtn = document.getElementById('correct-btn');
-    const errorMsg = document.getElementById('error-msg');
     const loading = document.getElementById('loading');
     const resultsArea = document.getElementById('results-area');
     const summaryBanner = document.getElementById('summary-banner');
-    const resultsGrid = document.getElementById('results-grid');
-    const noResults = document.getElementById('no-results');
-    const tomorrowOptions = document.getElementById('tomorrow-options');
+    const resultsList = document.getElementById('results-list');
+    const filteredOut = document.getElementById('filtered-out');
+    const filteredExplanation = document.getElementById('filtered-explanation');
+    const tomorrowSection = document.getElementById('tomorrow-section');
+    const tomorrowList = document.getElementById('tomorrow-list');
+    const mapSection = document.getElementById('map-section');
+    const emptyState = document.getElementById('empty-state');
 
-    let lastParsed = null;
+    async function loadSites() {
+      try { const resp = await fetch('./data/sites.json'); sites = await resp.json(); }
+      catch (e) { console.error('Failed to load sites:', e); }
+    }
+    loadSites();
 
-    // Suggestion chips
-    document.querySelectorAll('.chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        input.value = chip.dataset.prompt;
-        input.focus();
+    gpsBtn.addEventListener('click', requestGPS);
+
+    function requestGPS() {
+      if (!navigator.geolocation) { showLocationFallback('Geolocation not available'); return; }
+      gpsBtn.textContent = '⏳ Locating…';
+      gpsBtn.disabled = true;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          gpsBtn.textContent = '📍 Using my location';
+          gpsBtn.classList.add('active');
+          gpsBtn.disabled = false;
+          locationStatus.classList.add('visible');
+          locationStatus.classList.remove('fallback');
+          locationText.textContent = 'Using your current location';
+          updateUserMarker(userLocation.lat, userLocation.lng);
+          if (map) map.setView([userLocation.lat, userLocation.lng], 13);
+        },
+        (err) => {
+          console.warn('GPS error:', err.message);
+          gpsBtn.textContent = '📍 Use my location';
+          gpsBtn.classList.remove('active');
+          gpsBtn.disabled = false;
+          showLocationFallback(err.message || 'Tap the map to set your location');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    }
+
+    function showLocationFallback(msg) {
+      locationStatus.classList.add('visible');
+      locationStatus.classList.add('fallback');
+      locationText.textContent = msg || 'Tap the map to set your location';
+    }
+
+    function initMap() {
+      if (map) return;
+      map = L.map('map', { center: [41.7658, -72.6734], zoom: 12, zoomControl: true });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 18 }).addTo(map);
+      map.on('click', (e) => {
+        if (!userLocation) {
+          userLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
+          updateUserMarker(userLocation.lat, userLocation.lng);
+          locationStatus.classList.add('visible');
+          locationStatus.classList.remove('fallback');
+          locationText.textContent = 'Location set by tapping map';
+          gpsBtn.textContent = '📍 Location set';
+          gpsBtn.classList.add('active');
+        }
       });
-    });
+    }
 
-    // Submit handler
+    function updateUserMarker(lat, lng) {
+      if (userMarker) map.removeLayer(userMarker);
+      userMarker = L.circleMarker([lat, lng], { radius: 10, color: '#2563eb', fillColor: '#2563eb', fillOpacity: 0.9, weight: 2, opacity: 1 }).addTo(map);
+      const el = userMarker.getElement();
+      if (el) { el.style.animation = 'pulse 2s infinite'; el.style.boxShadow = '0 0 0 4px rgba(37,99,235,0.3)'; }
+    }
+
     submitBtn.addEventListener('click', handleSubmit);
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') handleSubmit(); });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSubmit(); });
+    document.querySelectorAll('.chip').forEach(chip => { chip.addEventListener('click', () => { input.value = chip.dataset.prompt; input.focus(); }); });
 
     function handleSubmit() {
       const query = input.value.trim();
       if (!query) return;
-      
+      if (!userLocation) { showEmptyState('Set your location first — use GPS or tap the map.'); return; }
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Understanding...';
+      submitBtn.textContent = 'Understanding…';
       hideAll();
-      
-      // Simulate LLM parsing with local logic
-      setTimeout(() => {
-        const parsed = parseQuery(query);
-        lastParsed = parsed;
-        showParsed(parsed);
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Find Food';
-      }, 500);
+      setTimeout(() => { const parsed = parseQuery(query); showParsed(parsed); submitBtn.disabled = false; submitBtn.textContent = 'Find Food'; }, 400);
     }
+
+    confirmBtn.addEventListener('click', () => { if (lastParsed) runSearch(lastParsed); });
+    correctBtn.addEventListener('click', () => { parsedConfirm.classList.remove('visible'); input.focus(); });
+
+    let lastParsed = null;
 
     function parseQuery(query) {
       const q = query.toLowerCase();
-      
-      // Detect transport mode
       let transport = 'walking';
-      if (q.includes('car') || q.includes('drive') || q.includes('vehicle')) transport = 'car';
-      else if (q.includes('bus') || q.includes('transit') || q.includes('public')) transport = 'bus';
-      
-      // Detect location (simple keyword matching for demo)
-      const locations = {
+      if (/\bcar\b|\bdrive\b|\bvehicle\b|i have a car/i.test(q)) transport = 'car';
+      else if (/\bbus\b|\btransit\b|\bpublic\b|take the\s+/i.test(q)) transport = 'bus';
+      const namedLocations = {
         'park street': { lat: 41.7578, lng: -72.6734, name: 'Park Street' },
         'asylum': { lat: 41.7694, lng: -72.6923, name: 'Asylum Ave' },
         'west hartford': { lat: 41.7624, lng: -72.7468, name: 'West Hartford' },
@@ -225,297 +320,235 @@
         'bloomfield': { lat: 41.8279, lng: -72.7312, name: 'Bloomfield' },
         'downtown': { lat: 41.7658, lng: -72.6734, name: 'Downtown Hartford' },
         'franklin': { lat: 41.7392, lng: -72.6584, name: 'Franklin Ave' },
-        'main st': { lat: 41.7658, lng: -72.6734, name: 'Main St' },
+        'main st': { lat: 41.7658, lng: -72.6734, name: 'Main Street' },
+        'albany ave': { lat: 41.7820, lng: -72.6900, name: 'Albany Avenue' },
+        'bartholomew': { lat: 41.7852, lng: -72.6789, name: 'Bartholomew Ave' },
+        'church st': { lat: 41.7821, lng: -72.6123, name: 'Church Street' }
       };
-      
-      let userLoc = locations['downtown'];
-      for (const [key, loc] of Object.entries(locations)) {
-        if (q.includes(key)) { userLoc = loc; break; }
-      }
-      
-      // Detect time
+      let detectedName = null;
+      for (const [key, loc] of Object.entries(namedLocations)) { if (q.includes(key)) { detectedName = loc.name; break; } }
       const now = new Date();
-      let targetDay = now.getDay(); // 0=Sun, 1=Mon...
-      let targetHour = now.getHours();
-      let targetMin = now.getMinutes();
-      let timeLabel = 'right now';
-      
-      if (q.includes('tomorrow')) {
-        targetDay = (targetDay + 1) % 7;
-        targetHour = 9; targetMin = 0;
-        timeLabel = 'tomorrow morning';
-      } else if (q.includes('morning')) {
-        targetHour = 9; targetMin = 0;
-        timeLabel = 'this morning';
-      } else if (q.includes('afternoon')) {
-        targetHour = 14; targetMin = 0;
-        timeLabel = 'this afternoon';
-      } else if (q.includes('evening')) {
-        targetHour = 18; targetMin = 0;
-        timeLabel = 'this evening';
-      } else if (q.includes('today')) {
-        timeLabel = 'today';
-      }
-      
-      return {
-        originalQuery: query,
-        transport,
-        location: userLoc,
-        targetDay,
-        targetHour,
-        targetMin,
-        timeLabel
-      };
+      const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
+      let targetDay = now.getDay(), targetHour = now.getHours(), targetMin = now.getMinutes(), timeLabel = 'right now';
+      if (/\btomorrow\b/i.test(q)) { targetDay = (targetDay+1)%7; targetHour=9; targetMin=0; timeLabel='tomorrow morning'; }
+      else if (/\bmorning\b/i.test(q)) { targetHour=9; targetMin=0; timeLabel='this morning'; }
+      else if (/\bafternoon\b/i.test(q)) { targetHour=14; targetMin=0; timeLabel='this afternoon'; }
+      else if (/\bevening\b/i.test(q)) { targetHour=18; targetMin=0; timeLabel='this evening'; }
+      return { originalQuery: query, transport, location: userLocation, detectedName, targetDay, targetHour, targetMin, timeLabel };
     }
 
     function showParsed(parsed) {
-      const transportLabels = { car: '🚗 Driving', bus: '🚌 Bus/Transit', walking: '🚶 Walking' };
-      parsedDetail.innerHTML = `
-        <strong>Location:</strong> ${parsed.location.name}<br>
-        <strong>Transport:</strong> ${transportLabels[parsed.transport]}<br>
-        <strong>When:</strong> ${parsed.timeLabel}
-      `;
+      const labels = { car: '🚗 Driving', bus: '🚌 Bus/Transit', walking: '🚶 Walking' };
+      parsedDetail.innerHTML = `<strong>Location:</strong> ${parsed.detectedName || 'Your current location'}<br><strong>Transport:</strong> ${labels[parsed.transport]}<br><strong>When:</strong> ${parsed.timeLabel}`;
       parsedConfirm.classList.add('visible');
     }
-
-    confirmBtn.addEventListener('click', () => {
-      if (lastParsed) runSearch(lastParsed);
-    });
-
-    correctBtn.addEventListener('click', () => {
-      parsedConfirm.classList.remove('visible');
-      input.focus();
-    });
 
     async function runSearch(parsed) {
       parsedConfirm.classList.remove('visible');
       loading.classList.add('visible');
       resultsArea.classList.remove('visible');
-      noResults.style.display = 'none';
-      
-      // Simulate search delay
-      await new Promise(r => setTimeout(r, 800));
-      
-      const results = rankSites(sites, parsed);
+      tomorrowSection.classList.remove('visible');
+      mapSection.classList.remove('visible');
+      filteredOut.classList.remove('visible');
+      await new Promise(r => setTimeout(r, 600));
+      const { todayResults, filteredOutResults, tomorrowCandidates } = rankAndScore(sites, parsed);
       loading.classList.remove('visible');
-      resultsArea.classList.add('visible');
-      renderResults(results, parsed);
+      renderResults(todayResults, filteredOutResults, tomorrowCandidates, parsed);
     }
 
-    function rankSites(sites, parsed) {
+    function rankAndScore(sites, parsed) {
       const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
       const targetDayKey = dayNames[parsed.targetDay];
       const targetMinutes = parsed.targetHour * 60 + parsed.targetMin;
-      
-      return sites.map(site => {
-        // Calculate travel time (simplified heuristic)
+      const todayResults = [], filteredOutResults = [], tomorrowCandidates = [];
+      sites.forEach(site => {
         const dist = haversine(parsed.location.lat, parsed.location.lng, site.lat, site.lng);
         let travelTime;
-        if (parsed.transport === 'car') travelTime = Math.max(5, Math.round(dist * 2.5)); // ~2.5 min/mile
-        else if (parsed.transport === 'bus') travelTime = Math.max(10, Math.round(dist * 8)); // ~8 min/mile + wait
-        else travelTime = Math.max(15, Math.round(dist * 20)); // ~20 min/mile walking
-        
-        // Check hours
+        if (parsed.transport === 'car') travelTime = Math.max(5, Math.round(dist * 2.5));
+        else if (parsed.transport === 'bus') travelTime = Math.max(10, Math.round(dist * 8));
+        else travelTime = Math.max(15, Math.round(dist * 20));
+        const scoreResult = calculateScore(site, targetDayKey, targetMinutes, site.verified);
         const hoursToday = site.hours[targetDayKey];
-        let openNow = false;
-        let hoursText = 'Hours unavailable';
-        let score = 0;
-        let scoreLabel = '';
-        let scoreClass = '';
-        let rationale = '';
-        
-        if (hoursToday) {
-          const [openStr, closeStr] = hoursToday;
-          const [openH, openM] = openStr.split(':').map(Number);
-          const [closeH, closeM] = closeStr.split(':').map(Number);
-          const openMin = openH * 60 + openM;
-          const closeMin = closeH * 60 + closeM;
-          openNow = targetMinutes >= openMin && targetMinutes <= closeMin;
-          hoursText = `Open ${openStr}–${closeStr}`;
-          
-          if (openNow) {
-            if (site.verified && site.verified >= '2026-09-01') {
-              score = 95; scoreLabel = 'Likely open'; scoreClass = 'score-high';
-              rationale = 'Open per verified hours';
-            } else {
-              score = 75; scoreLabel = 'Probably open — call to confirm'; scoreClass = 'score-medium';
-              rationale = 'Open per hours but not recently verified';
-            }
-          } else {
-            score = 0; scoreLabel = 'Closed now'; scoreClass = 'score-closed';
-            rationale = `Closed at ${parsed.timeLabel} (${hoursText})`;
-          }
-        } else {
-          score = 35; scoreLabel = 'Hours unverified — call first'; scoreClass = 'score-low';
-          rationale = 'No hours data available for this day';
-          hoursText = 'Hours not listed';
-        }
-        
-        const arrivalTime = targetMinutes + travelTime;
-        const canReach = !hoursToday || (arrivalTime <= (hoursToday ? (hoursToday[1].split(':').map(Number)[0]*60 + hoursToday[1].split(':').map(Number)[1]) : Infinity));
-        
-        return {
-          ...site,
-          travelTime,
-          distance: dist,
-          openNow,
-          hoursText,
-          score,
-          scoreLabel,
-          scoreClass,
-          rationale,
-          canReach,
-          arrivalMinutes: arrivalTime
-        };
-      })
-      .filter(s => s.canReach || s.score > 0) // Show closed ones too but ranked lower
-      .sort((a, b) => {
-        // Primary: reachability (can reach before close)
-        if (a.canReach !== b.canReach) return a.canReach ? -1 : 1;
-        // Secondary: open-now score
-        if (b.score !== a.score) return b.score - a.score;
-        // Tertiary: travel time
-        return a.travelTime - b.travelTime;
+        const hoursText = hoursToday ? `Open ${hoursToday[0]}–${hoursToday[1]}` : 'Hours not listed';
+        const result = { ...site, travelTime, distance: dist, score: scoreResult.score, scoreLabel: scoreResult.label, scoreClass: scoreResult.class, rationale: scoreResult.rationale, hoursText };
+        if (result.score === 0) {
+          filteredOutResults.push(result);
+          const tomorrowKey = dayNames[(parsed.targetDay+1)%7];
+          if (site.hours[tomorrowKey]) { result.tomorrowOpen = site.hours[tomorrowKey][0]; tomorrowCandidates.push(result); }
+        } else { todayResults.push(result); }
       });
+      todayResults.sort((a, b) => { if (b.score !== a.score) return b.score - a.score; return a.travelTime - b.travelTime; });
+      tomorrowCandidates.sort((a, b) => a.tomorrowOpen.localeCompare(b.tomorrowOpen));
+      return { todayResults, filteredOutResults, tomorrowCandidates };
+    }
+
+    function calculateScore(site, dayKey, targetMinutes, verifiedDateStr) {
+      const hours = site.hours[dayKey];
+      if (!hours) return { score: 35, label: 'Hours unverified — call first', class: 'score-low', rationale: 'No hours data for this day — call to confirm before going.' };
+      const [openStr, closeStr] = hours;
+      const [openH, openM] = openStr.split(':').map(Number);
+      const [closeH, closeM] = closeStr.split(':').map(Number);
+      const openMin = openH * 60 + openM, closeMin = closeH * 60 + closeM;
+      const isOpenNow = targetMinutes >= openMin && targetMinutes <= closeMin;
+      if (!isOpenNow) return { score: 0, label: 'Filtered from "today"', class: 'score-closed', rationale: `Closed today (${openStr}–${closeStr}) — shown under Plan Ahead.` };
+      let recentlyVerified = false;
+      if (verifiedDateStr) { const verified = new Date(verifiedDateStr); const daysSince = (Date.now() - verified.getTime()) / (1000*60*60*24); recentlyVerified = daysSince <= 30; }
+      if (recentlyVerified) return { score: 95, label: 'Likely open', class: 'score-high', rationale: 'Open now per posted hours, verified recently.' };
+      return { score: 75, label: 'Probably open — call to confirm', class: 'score-medium', rationale: 'Open per hours but not recently verified.' };
+    }
+
+    function renderResults(todayResults, filteredOutResults, tomorrowCandidates, parsed) {
+      if (todayResults.length === 0) summaryBanner.innerHTML = `No locations open ${parsed.timeLabel} reachable by ${parsed.transport}.`;
+      else summaryBanner.innerHTML = `Found <span class="count">${todayResults.length}</span> reachable option${todayResults.length !== 1 ? 's' : ''} ${parsed.timeLabel} by ${parsed.transport}.`;
+      resultsArea.classList.add('visible');
+      resultsList.innerHTML = todayResults.map((site, idx) => createCard(site, idx + 1)).join('');
+      document.querySelectorAll('.result-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-action')) return;
+          const isExpanded = card.classList.toggle('expanded');
+          const id = card.dataset.id;
+          if (isExpanded) highlightOnMap(id); else clearMapHighlight();
+        });
+      });
+      document.querySelectorAll('.btn-directions').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          const site = sites.find(s => s.id === id);
+          if (site) launchGoogleMaps(site, lastParsed.transport, 'directions');
+        });
+      });
+      document.querySelectorAll('.btn-detail').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          const site = sites.find(s => s.id === id);
+          if (site) launchGoogleMaps(site, lastParsed.transport, 'detail');
+        });
+      });
+      if (filteredOutResults.length > 0) {
+        const topFiltered = filteredOutResults.slice(0, 2);
+        let html = '';
+        topFiltered.forEach(site => { html += `<strong>${site.name}</strong> — ${site.rationale}<br>`; });
+        if (filteredOutResults.length > 2) html += `<span style="color:var(--text-muted);font-size:0.85rem;">+ ${filteredOutResults.length - 2} more filtered out</span>`;
+        filteredExplanation.innerHTML = html;
+        filteredOut.classList.add('visible');
+      }
+      if (tomorrowCandidates.length > 0) {
+        tomorrowSection.classList.add('visible');
+        tomorrowList.innerHTML = tomorrowCandidates.map(site => `<div class="tomorrow-item"><span class="time">Opens ${site.tomorrowOpen}</span><span class="name">${site.name}</span><span class="eta">~${site.travelTime} min by ${parsed.transport}</span></div>`).join('');
+      }
+      initMap();
+      plotResultsOnMap(todayResults);
+      mapSection.classList.add('visible');
+      if (todayResults.length === 0 && filteredOutResults.length === 0) {
+        resultsList.innerHTML = '';
+        showEmptyState('No food access sites found. Try a different location.');
+      }
+    }
+
+    function createCard(site, rank) {
+      const transportMode = lastParsed ? lastParsed.transport : 'walking';
+      return `
+        <article class="result-card" data-id="${site.id}">
+          <div class="card-top">
+            <div class="rank-badge">${rank}</div>
+            <div class="card-main">
+              <div class="card-title">${site.name}</div>
+              <div class="card-subtitle">${site.type.replace('_',' ')} · ${site.address}, ${site.town}</div>
+              <div class="card-details">
+                <span class="detail-item"><strong>🚌 Travel:</strong> ~${site.travelTime} min</span>
+                <span class="detail-item"><strong>🕐 Today:</strong> ${site.hoursText}</span>
+                <span class="detail-item"><strong>📞</strong> <a href="tel:${site.phone.replace(/\D/g,'')}" style="color:inherit;text-decoration:none;">${site.phone}</a></span>
+              </div>
+            </div>
+            <div class="card-right">
+              <span class="score-badge ${site.scoreClass}">${site.scoreLabel}</span>
+              <div class="score-rationale">${site.rationale}</div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a class="btn-action btn-directions" href="${buildGoogleMapsUrl(site, transportMode, 'directions')}" target="_blank" data-id="${site.id}">🧭 Directions</a>
+            <a class="btn-action btn-detail" href="${buildGoogleMapsUrl(site, transportMode, 'detail')}" target="_blank" data-id="${site.id}">🔍 Detail</a>
+          </div>
+        </article>`;
+    }
+
+    function buildGoogleMapsUrl(site, transportMode, mode) {
+      const travelModeMap = { car: 'driving', bus: 'transit', walking: 'walking' };
+      const gmode = travelModeMap[transportMode] || 'walking';
+      const coords = `${site.lat},${site.lng}`;
+      if (mode === 'directions') return `https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=${gmode}`;
+      return `https://www.google.com/maps/place/?api=1&query=${coords}`;
+    }
+
+    function launchGoogleMaps(site, transportMode, mode) { window.open(buildGoogleMapsUrl(site, transportMode, mode), '_blank'); }
+
+    function plotResultsOnMap(todayResults) {
+      const siteMarkers = [];
+      todayResults.forEach(site => {
+        const color = site.score >= 90 ? '#2d6a4f' : site.score >= 60 ? '#c9a227' : site.score >= 30 ? '#c46a3d' : '#8a8580';
+        const marker = L.circleMarker([site.lat, site.lng], { radius: 10, color, fillColor: color, fillOpacity: 0.85, weight: 2, opacity: 1 }).addTo(map);
+        marker.bindPopup(`<div style="font-family:system-ui;font-size:13px;line-height:1.5;"><strong style="font-size:14px;">${site.name}</strong><br>${site.address}, ${site.town}<br><span style="color:#6b6560;">${site.hoursText}</span><br><span style="font-weight:600;color:${color};">${site.scoreLabel} (${site.score})</span></div>`);
+        siteMarkers.push({ marker, site });
+      });
+      if (todayResults.length > 0 && userLocation) {
+        const top = todayResults[0];
+        routeLine = L.polyline([[userLocation.lat, userLocation.lng], [top.lat, top.lng]], { color: '#b07d5a', weight: 3, opacity: 0.6, dashArray: '8, 8' }).addTo(map);
+      }
+      const allPoints = [userLocation ? [userLocation.lat, userLocation.lng] : null, ...todayResults.map(s => [s.lat, s.lng])].filter(Boolean);
+      if (allPoints.length > 1) map.fitBounds(L.latLngBounds(allPoints), { padding: [40, 40] });
+      else if (allPoints.length === 1) map.setView(allPoints[0], 13);
+    }
+
+    function highlightOnMap(siteId) {
+      clearMapHighlight();
+      const entry = siteMarkers.find(({ site }) => site.id === siteId);
+      if (entry) {
+        entry.marker.setRadius(14);
+        entry.marker.openPopup();
+        if (userLocation) {
+          if (routeLine) map.removeLayer(routeLine);
+          routeLine = L.polyline([[userLocation.lat, userLocation.lng], [entry.site.lat, entry.site.lng]], { color: '#b07d5a', weight: 4, opacity: 0.8 }).addTo(map);
+        }
+        map.setView([entry.site.lat, entry.site.lng], 14);
+      }
+    }
+
+    function clearMapHighlight() {
+      siteMarkers.forEach(({ marker }) => { marker.setRadius(10); marker.closePopup(); });
+      if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
     }
 
     function haversine(lat1, lon1, lat2, lon2) {
-      const R = 3959; // miles
+      const R = 3959;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    function renderResults(results, parsed) {
-      const openResults = results.filter(r => r.score > 0 && r.canReach);
-      const closedResults = results.filter(r => r.score === 0 || !r.canReach);
-      
-      if (openResults.length === 0) {
-        summaryBanner.textContent = `No locations open ${parsed.timeLabel} that you can reach by ${parsed.transport}.`;
-        resultsGrid.innerHTML = '';
-        noResults.style.display = 'block';
-        renderTomorrowOptions(closedResults, parsed);
-        return;
-      }
-      
-      summaryBanner.innerHTML = `Found <span class="results-count">${openResults.length}</span> option${openResults.length !== 1 ? 's' : ''} you can reach ${parsed.timeLabel} by ${parsed.transport}.`;
-      noResults.style.display = 'none';
-      
-      resultsGrid.innerHTML = openResults.map((site, idx) => createCard(site, idx)).join('');
-      
-      // Add click handlers
-      document.querySelectorAll('.result-card').forEach(card => {
-        card.addEventListener('click', e => {
-          if (!e.target.closest('.btn-action')) {
-            card.classList.toggle('expanded');
-          }
-        });
-      });
-      
-      document.querySelectorAll('.btn-action.directions').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          const card = e.target.closest('.result-card');
-          card.classList.toggle('expanded');
-        });
-      });
-      
-      document.querySelectorAll('.btn-action.call').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          const phone = e.target.dataset.phone;
-          window.open(`tel:${phone.replace(/\D/g,'')}`, '_self');
-        });
-      });
-    }
-
-    function createCard(site, idx) {
-      return `
-        <article class="result-card" data-id="${site.id}">
-          <div class="card-header">
-            <span class="card-title">${site.name}</span>
-            <span class="card-type type-${site.type}">${site.type.replace('_',' ')}</span>
-          </div>
-          <div class="card-body">
-            <div class="info-row"><strong>Address:</strong> <span>${site.address}, ${site.town}</span></div>
-            <div class="info-row"><strong>Phone:</strong> <span>${site.phone}</span></div>
-            <div class="info-row"><strong>Hours:</strong> <span>${site.hoursText}</span></div>
-            <div class="info-row"><strong>Transit:</strong> <span>${site.transit_notes}</span></div>
-            <div class="info-row"><strong>Travel time:</strong> <span>~${site.travelTime} min by ${site.type === 'snap_grocer' ? 'car/bus' : 'bus/walk'}</span></div>
-            <div class="info-row"><strong>SNAP:</strong> <span>${site.snap_accepted ? 'Yes' : 'No'}</span></div>
-            <div class="score-badge ${site.scoreClass}">${site.scoreLabel}</div>
-            <div class="score-rationale">${site.rationale}</div>
-          </div>
-          <div class="card-actions">
-            <button class="btn-action directions" data-id="${site.id}">Directions</button>
-            <a class="btn-action call secondary" href="tel:${site.phone.replace(/\D/g,'')}" data-phone="${site.phone}">Call</a>
-          </div>
-          <div class="expanded-content" style="display:none;">
-            <div class="directions">
-              <h4>Directions from ${site.type === 'snap_grocer' ? 'your location' : 'transit stop'}</h4>
-              ${generateDirections(site)}
-              <p style="margin-top:12px; font-size:0.85rem; color:#6b7280;">
-                <strong>Notes:</strong> ${site.notes || 'No additional notes.'}
-              </p>
-            </div>
-          </div>
-        </article>
-      `;
-    }
-
-    function generateDirections(site) {
-      const transitMap = {
-        'CTtransit 41/47': 'Take CTtransit 41 or 47 toward Hartford. Exit at Park & Main. Walk 2 min north on Park St.',
-        'CTtransit 38/39/40': 'Take CTtransit 38, 39, or 40 toward downtown. Exit at Main & Asylum. Walk 3 min east.',
-        'CTtransit 62': 'Take CTtransit 62 toward Hartford. Exit at Woodland & Homestead. Entrance is at main hospital lobby.',
-        'CTtransit 83/87': 'Take CTtransit 83 or 87 toward East Hartford. Exit at Main & Church. Pantry is on Church St.',
-        'CTtransit 61/63/65': 'Take CTtransit 61, 63, or 65 toward West Hartford. Exit at S Main & Farmington.',
-        'CTtransit 501/503': 'Take CTtransit 501 or 503 toward New Britain. Exit at Main & West Main.',
-        'CTtransit 80/82': 'Take CTtransit 80 or 82 toward Manchester. Exit at Main & Center.',
-        'CTtransit 36/52': 'Take CTtransit 36 or 52 toward Bloomfield. Exit at Park & Cottage Grove. Walk 5 min.',
-        'CTtransit 32/34': 'Take CTtransit 32 or 34 toward Franklin Ave. Exit at Franklin & Wethersfield.',
-      };
-      
-      for (const [key, dir] of Object.entries(transitMap)) {
-        if (site.transit_notes.includes(key)) return `<p>${dir}</p>`;
-      }
-      return `<p>Use your maps app for directions to ${site.address}, ${site.town}.</p>`;
-    }
-
-    function renderTomorrowOptions(closedResults, parsed) {
-      // Sort by next opening time
-      const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
-      const tomorrowDay = dayNames[(parsed.targetDay + 1) % 7];
-      
-      const withTomorrowHours = closedResults.filter(r => r.hours[tomorrowDay]).map(r => {
-        const [openStr] = r.hours[tomorrowDay];
-        return { ...r, tomorrowOpen: openStr };
-      }).sort((a,b) => a.tomorrowOpen.localeCompare(b.tomorrowOpen));
-      
-      if (withTomorrowHours.length > 0) {
-        tomorrowOptions.innerHTML = withTomorrowHours.slice(0, 5).map(site => `
-          <div style="background:white; border-radius:8px; padding:12px 16px; margin:8px auto; max-width:400px; text-align:left; box-shadow:0 1px 4px rgba(0,0,0,0.08);">
-            <strong>${site.name}</strong> (${site.town}) — Opens ${site.tomorrowOpen} · ~${site.travelTime} min by ${parsed.transport}
-          </div>
-        `).join('');
-      } else {
-        tomorrowOptions.innerHTML = '<p style="color:#9ca3af;">No hours available for tomorrow.</p>';
-      }
-    }
-
-    function showError(msg) {
-      errorMsg.textContent = msg;
-      errorMsg.classList.add('visible');
+    function showEmptyState(msg) {
+      resultsArea.classList.remove('visible');
+      tomorrowSection.classList.remove('visible');
+      mapSection.classList.remove('visible');
+      filteredOut.classList.remove('visible');
+      emptyState.style.display = 'block';
+      emptyState.querySelector('h3').textContent = msg || 'No location set';
+      emptyState.querySelector('p').textContent = msg ? 'Set your location and try again.' : 'Use GPS or tap the map to set your starting point, then search.';
     }
 
     function hideAll() {
-      errorMsg.classList.remove('visible');
       loading.classList.remove('visible');
       resultsArea.classList.remove('visible');
+      tomorrowSection.classList.remove('visible');
+      mapSection.classList.remove('visible');
+      filteredOut.classList.remove('visible');
       parsedConfirm.classList.remove('visible');
-      noResults.style.display = 'none';
+      emptyState.style.display = 'none';
     }
+
+    document.addEventListener('DOMContentLoaded', () => { initMap(); });
   </script>
 </body>
 </html>
