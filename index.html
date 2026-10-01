@@ -446,12 +446,13 @@
     }
 
     function showParsed(parsed) {
-      const transportLabels = { car: '🚗 Driving', bus: '🚌 Bus/Transit', walking: '🚶 Walking', bike: '🚲 Bike' };
-      const whenLabels = { now: 'Right now', morning: 'This morning', afternoon: 'This afternoon', evening: 'This evening', tomorrow: 'Tomorrow morning' };
-      const paymentLabels = { cash: 'Cash', card: 'Credit card', debit: 'Debit', snap: 'SNAP/EBT' };
-      parsedDetail.innerHTML = `<strong>Location:</strong> ${parsed.detectedName || 'Your current location'}<br><strong>Transport:</strong> ${transportLabels[parsed.transport]}<br><strong>When:</strong> ${whenLabels[parsed.when]}<br><strong>Payment/Access:</strong> ${paymentLabels[parsed.payment]}`;
-      parsedConfirm.classList.add('visible');
-    }
+          lastParsed = parsed;
+          const transportLabels = { car: '🚗 Driving', bus: '🚌 Bus/Transit', walking: '🚶 Walking', bike: '🚲 Bike' };
+          const whenLabels = { now: 'Right now', morning: 'This morning', afternoon: 'This afternoon', evening: 'This evening', tomorrow: 'Tomorrow morning' };
+          const paymentLabels = { cash: 'Cash', card: 'Credit card', debit: 'Debit', snap: 'SNAP/EBT' };
+          parsedDetail.innerHTML = `<strong>Location:</strong> ${parsed.detectedName || 'Your current location'}<br><strong>Transport:</strong> ${transportLabels[parsed.transport]}<br><strong>When:</strong> ${whenLabels[parsed.when]}<br><strong>Payment/Access:</strong> ${paymentLabels[parsed.payment]}`;
+          parsedConfirm.classList.add('visible');
+        }
 
     async function runSearch(parsed) {
       parsedConfirm.classList.remove('visible');
