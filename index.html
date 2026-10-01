@@ -641,12 +641,13 @@
     }
 
     function buildGoogleMapsUrl(site, transportMode, mode) {
-      const travelModeMap = { car: 'driving', bus: 'transit', walking: 'walking', bike: 'bicycling' };
-      const gmode = travelModeMap[transportMode] || 'walking';
-      const coords = `${site.lat},${site.lng}`;
-      if (mode === 'directions') return `https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=${gmode}`;
-      return `https://www.google.com/maps/place/?api=1&query=${coords}`;
-    }
+          const travelModeMap = { car: 'driving', bus: 'transit', walking: 'walking', bike: 'bicycling' };
+          const gmode = travelModeMap[transportMode] || 'walking';
+          const coords = `${site.lat},${site.lng}`;
+          const query = encodeURIComponent(`${site.name}, ${site.address}, ${site.town}`);
+          if (mode === 'directions') return `https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=${gmode}`;
+          return `https://www.google.com/maps/search/?api=1&query=${query}`;
+        }
 
     function launchGoogleMaps(site, transportMode, mode) { window.open(buildGoogleMapsUrl(site, transportMode, mode), '_blank'); }
 
