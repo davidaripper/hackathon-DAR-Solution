@@ -160,7 +160,7 @@
 
     <div class="search-section">
       <div class="search-row">
-        <input type="text" id="user-input" placeholder="e.g., I'm near Park Street, need food today" autocomplete="off">
+        <input type="text" id="user-input" placeholder="Optional: add details (e.g., 'need food today')" autocomplete="off">
         <button id="gps-btn" type="button"><span class="icon">📍</span> Use my location</button>
       </div>
       <button id="submit-btn" type="button">Find Food</button>
@@ -242,16 +242,17 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module">
+    // === State ===
     let sites = [];
     let userLocation = null;
     let map = null;
     let userMarker = null;
     let routeLine = null;
     let siteMarkers = [];
-
-    // Filter state
     let currentFilters = { transport: 'bike', when: 'now', payment: 'cash' };
+    let lastParsed = null;
 
+    // === DOM ===
     const input = document.getElementById('user-input');
     const submitBtn = document.getElementById('submit-btn');
     const gpsBtn = document.getElementById('gps-btn');
@@ -272,7 +273,7 @@
     const mapSection = document.getElementById('map-section');
     const emptyState = document.getElementById('empty-state');
 
-    // Filter button handling
+    // === Filter buttons ===
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const filter = btn.dataset.filter;
@@ -287,12 +288,21 @@
       });
     });
 
+    // === Load sites ===
     async function loadSites() {
-      try { const resp = await fetch('./data/sites.json'); sites = await resp.json(); }
-      catch (e) { console.error('Failed to load sites:', e); }
+      try {
+        const resp = await fetch('./data/sites.json');
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        sites = await resp.json();
+        console.log('Loaded', sites.length, 'sites');
+      } catch (e) {
+        console.error('Failed to load sites:', e);
+        showEmptyState('Failed to load site data. Please refresh.');
+      }
     }
     loadSites();
 
+    // === GPS / Location ===
     gpsBtn.addEventListener('click', toggleGPS);
 
     function toggleGPS() {
@@ -377,28 +387,32 @@
       if (el) { el.style.animation = 'pulse 2s infinite'; el.style.boxShadow = '0 0 0 4px rgba(37,99,235,0.3)'; }
     }
 
+    // === Search flow ===
     submitBtn.addEventListener('click', handleSubmit);
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSubmit(); });
 
     function handleSubmit() {
       const query = input.value.trim();
-      if (!query) return;
+      // Input is optional - use filters if empty
       if (!userLocation) { showEmptyState('Set your location first — use GPS or tap the map.'); return; }
       submitBtn.disabled = true;
       submitBtn.textContent = 'Understanding…';
       hideAll();
       setTimeout(() => {
-        const parsed = parseQuery(query);
-        showParsed(parsed);
+        try {
+          const parsed = parseQuery(query);
+          showParsed(parsed);
+        } catch (e) {
+          console.error('Parse error:', e);
+          showEmptyState('Error understanding request. Try again.');
+        }
         submitBtn.disabled = false;
         submitBtn.textContent = 'Find Food';
-      }, 400);
+      }, 300);
     }
 
     confirmBtn.addEventListener('click', () => { if (lastParsed) runSearch(lastParsed); });
     correctBtn.addEventListener('click', () => { parsedConfirm.classList.remove('visible'); input.focus(); });
-
-    let lastParsed = null;
 
     function parseQuery(query) {
       const q = query.toLowerCase();
@@ -437,7 +451,7 @@
       else if (/\bafternoon\b/i.test(q) || when === 'afternoon') { targetHour=14; targetMin=0; timeLabel='this afternoon'; }
       else if (/\bevening\b/i.test(q) || when === 'evening') { targetHour=18; targetMin=0; timeLabel='this evening'; }
 
-      return { originalQuery: query, transport, when, payment, location: userLocation, detectedName, targetDay, targetHour, targetMin, timeLabel };
+      return { originalQuery: query || '(filters only)', transport, when, payment, location: userLocation, detectedName, targetDay, targetHour, targetMin, timeLabel };
     }
 
     function showParsed(parsed) {
@@ -455,10 +469,16 @@
       resultsArea.classList.remove('visible');
       tomorrowSection.classList.remove('visible');
       filteredOut.classList.remove('visible');
-      await new Promise(r => setTimeout(r, 600));
-      const { todayResults, filteredOutResults, tomorrowCandidates, noResultsReason } = rankAndScore(sites, parsed);
-      loading.classList.remove('visible');
-      renderResults(todayResults, filteredOutResults, tomorrowCandidates, parsed, noResultsReason);
+      await new Promise(r => setTimeout(r, 400));
+      try {
+        const { todayResults, filteredOutResults, tomorrowCandidates, noResultsReason } = rankAndScore(sites, parsed);
+        loading.classList.remove('visible');
+        renderResults(todayResults, filteredOutResults, tomorrowCandidates, parsed, noResultsReason);
+      } catch (e) {
+        console.error('Search error:', e);
+        loading.classList.remove('visible');
+        showEmptyState('Error searching. Please try again.');
+      }
     }
 
     function rankAndScore(sites, parsed) {
