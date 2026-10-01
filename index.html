@@ -28,6 +28,7 @@
     #gps-btn { padding: 14px 12px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; transition: background 0.2s; white-space: nowrap; font-family: inherit; }
     #gps-btn:hover { background: var(--accent-dark); }
     #gps-btn.active { background: var(--green); }
+    #gps-btn.clearing { background: #e0d8cc; color: var(--text); }
     #submit-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; font-family: inherit; }
     #submit-btn:hover { background: var(--accent-dark); }
     #submit-btn:disabled { background: #c4b5a5; cursor: not-allowed; }
@@ -119,6 +120,10 @@
     .legend-dot.low { background: var(--terracotta); }
     .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
     .empty-state h3 { color: var(--text); margin-bottom: 8px; font-size: 1.1rem; }
+    .explanation-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 20px; border-left: 4px solid var(--accent); }
+    .explanation-card h3 { font-size: 1rem; color: var(--accent-dark); margin-bottom: 8px; }
+    .explanation-card p { color: var(--text); line-height: 1.6; }
+    .explanation-card .detail { font-size: 0.9rem; color: var(--text-muted); margin-top: 8px; }
     footer { text-align: center; margin-top: 32px; padding: 20px 0 10px; color: var(--text-muted); font-size: 0.8rem; line-height: 1.6; border-top: 1px solid #e8e4de; }
     footer a { color: var(--accent-dark); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
@@ -290,7 +295,36 @@
     }
     loadSites();
 
-    gpsBtn.addEventListener('click', requestGPS);
+    gpsBtn.addEventListener('click', toggleGPS);
+
+    function toggleGPS() {
+      // If already active, clear location
+      if (gpsBtn.classList.contains('active') && userLocation) {
+        clearLocation();
+        return;
+      }
+      // Otherwise request GPS
+      requestGPS();
+    }
+
+    function clearLocation() {
+      userLocation = null;
+      if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+      if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+      siteMarkers.forEach(({ marker }) => map.removeLayer(marker));
+      siteMarkers = [];
+      gpsBtn.textContent = '📍 Use my location';
+      gpsBtn.classList.remove('active');
+      gpsBtn.classList.add('clearing');
+      setTimeout(() => gpsBtn.classList.remove('clearing'), 300);
+      locationStatus.classList.remove('visible');
+      locationStatus.classList.remove('fallback');
+      locationText.textContent = 'Tap the map to set your location, or use GPS';
+      // Reset map to Hartford center
+      if (map) map.setView([41.7658, -72.6734], 12);
+      // Clear any results
+      hideAll();
+    }
 
     function requestGPS() {
       if (!navigator.geolocation) { showLocationFallback('Geolocation not available'); return; }
@@ -299,12 +333,12 @@
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          gpsBtn.textContent = '📍 Using my location';
+          gpsBtn.textContent = '📍 Using my location (tap to clear)';
           gpsBtn.classList.add('active');
           gpsBtn.disabled = false;
           locationStatus.classList.add('visible');
           locationStatus.classList.remove('fallback');
-          locationText.textContent = 'Using your current location';
+          locationText.textContent = 'Using your current location — tap button to clear';
           updateUserMarker(userLocation.lat, userLocation.lng);
           if (map) map.setView([userLocation.lat, userLocation.lng], 13);
         },
@@ -335,8 +369,8 @@
           updateUserMarker(userLocation.lat, userLocation.lng);
           locationStatus.classList.add('visible');
           locationStatus.classList.remove('fallback');
-          locationText.textContent = 'Location set by tapping map';
-          gpsBtn.textContent = '📍 Location set';
+          locationText.textContent = 'Location set by tapping map — tap button to clear';
+          gpsBtn.textContent = '📍 Location set (tap to clear)';
           gpsBtn.classList.add('active');
         }
       });
@@ -427,9 +461,9 @@
       filteredOut.classList.remove('visible');
       // Map stays visible; we just update markers
       await new Promise(r => setTimeout(r, 600));
-      const { todayResults, filteredOutResults, tomorrowCandidates } = rankAndScore(sites, parsed);
+      const { todayResults, filteredOutResults, tomorrowCandidates, noResultsReason } = rankAndScore(sites, parsed);
       loading.classList.remove('visible');
-      renderResults(todayResults, filteredOutResults, tomorrowCandidates, parsed);
+      renderResults(todayResults, filteredOutResults, tomorrowCandidates, parsed, noResultsReason);
     }
 
     function rankAndScore(sites, parsed) {
@@ -437,6 +471,8 @@
       const targetDayKey = dayNames[parsed.targetDay];
       const targetMinutes = parsed.targetHour * 60 + parsed.targetMin;
       const todayResults = [], filteredOutResults = [], tomorrowCandidates = [];
+      let noResultsReason = null;
+
       sites.forEach(site => {
         const dist = haversine(parsed.location.lat, parsed.location.lng, site.lat, site.lng);
         let travelTime;
@@ -456,7 +492,25 @@
       });
       todayResults.sort((a, b) => { if (b.score !== a.score) return b.score - a.score; return a.travelTime - b.travelTime; });
       tomorrowCandidates.sort((a, b) => a.tomorrowOpen.localeCompare(b.tomorrowOpen));
-      return { todayResults, filteredOutResults, tomorrowCandidates };
+
+      // Determine why no results
+      if (todayResults.length === 0 && filteredOutResults.length === 0 && tomorrowCandidates.length === 0) {
+        noResultsReason = 'No food access sites in database for this area.';
+      } else if (todayResults.length === 0) {
+        // Check what filtered everything out
+        const closedCount = filteredOutResults.filter(r => r.rationale?.includes('Closed today')).length;
+        const unverifiedCount = filteredOutResults.filter(r => r.rationale?.includes('unverified')).length;
+        if (closedCount > 0 && unverifiedCount === 0) {
+          noResultsReason = `All ${closedCount} nearby sites are closed ${parsed.timeLabel}.`;
+        } else if (unverifiedCount > 0 && closedCount === 0) {
+          noResultsReason = `All ${unverifiedCount} nearby sites have unverified hours for ${parsed.timeLabel}.`;
+        } else if (closedCount > 0 && unverifiedCount > 0) {
+          noResultsReason = `${closedCount} nearby sites are closed and ${unverifiedCount} have unverified hours ${parsed.timeLabel}.`;
+        } else {
+          noResultsReason = `No sites match your criteria (${parsed.transport}, ${parsed.timeLabel}).`;
+        }
+      }
+      return { todayResults, filteredOutResults, tomorrowCandidates, noResultsReason };
     }
 
     function calculateScore(site, dayKey, targetMinutes, verifiedDateStr) {
@@ -474,11 +528,53 @@
       return { score: 75, label: 'Probably open — call to confirm', class: 'score-medium', rationale: 'Open per hours but not recently verified.' };
     }
 
-    function renderResults(todayResults, filteredOutResults, tomorrowCandidates, parsed) {
+    function renderResults(todayResults, filteredOutResults, tomorrowCandidates, parsed, noResultsReason) {
+      // Show explanation card if no results at all
+      if (noResultsReason) {
+        resultsArea.classList.add('visible');
+        summaryBanner.innerHTML = `No locations open ${parsed.timeLabel} reachable by ${parsed.transport}.`;
+        resultsList.innerHTML = `
+          <div class="explanation-card">
+            <h3>Why no results?</h3>
+            <p>${noResultsReason}</p>
+            <div class="detail">Showing all sites sorted by distance regardless of hours.</div>
+          </div>`;
+        // Show ALL sites sorted by distance as fallback
+        const allResults = [...todayResults, ...filteredOutResults].sort((a, b) => a.distance - b.distance);
+        if (allResults.length > 0) {
+          resultsList.innerHTML += allResults.map((site, idx) => createCard(site, idx + 1)).join('');
+          attachCardListeners();
+        }
+        plotResultsOnMap(allResults.length > 0 ? allResults : todayResults);
+        return;
+      }
+
       if (todayResults.length === 0) summaryBanner.innerHTML = `No locations open ${parsed.timeLabel} reachable by ${parsed.transport}.`;
       else summaryBanner.innerHTML = `Found <span class="count">${todayResults.length}</span> reachable option${todayResults.length !== 1 ? 's' : ''} ${parsed.timeLabel} by ${parsed.transport}.`;
       resultsArea.classList.add('visible');
       resultsList.innerHTML = todayResults.map((site, idx) => createCard(site, idx + 1)).join('');
+      attachCardListeners();
+
+      if (filteredOutResults.length > 0) {
+        const topFiltered = filteredOutResults.slice(0, 2);
+        let html = '';
+        topFiltered.forEach(site => { html += `<strong>${site.name}</strong> — ${site.rationale}<br>`; });
+        if (filteredOutResults.length > 2) html += `<span style="color:var(--text-muted);font-size:0.85rem;">+ ${filteredOutResults.length - 2} more filtered out</span>`;
+        filteredExplanation.innerHTML = html;
+        filteredOut.classList.add('visible');
+      }
+      if (tomorrowCandidates.length > 0) {
+        tomorrowSection.classList.add('visible');
+        tomorrowList.innerHTML = tomorrowCandidates.map(site => `<div class="tomorrow-item"><span class="time">Opens ${site.tomorrowOpen}</span><span class="name">${site.name}</span><span class="eta">~${site.travelTime} min by ${parsed.transport}</span></div>`).join('');
+      }
+      plotResultsOnMap(todayResults);
+      if (todayResults.length === 0 && filteredOutResults.length === 0) {
+        resultsList.innerHTML = '';
+        showEmptyState('No food access sites found. Try a different location.');
+      }
+    }
+
+    function attachCardListeners() {
       document.querySelectorAll('.result-card').forEach(card => {
         card.addEventListener('click', (e) => {
           if (e.target.closest('.btn-action')) return;
@@ -503,23 +599,6 @@
           if (site) launchGoogleMaps(site, lastParsed.transport, 'detail');
         });
       });
-      if (filteredOutResults.length > 0) {
-        const topFiltered = filteredOutResults.slice(0, 2);
-        let html = '';
-        topFiltered.forEach(site => { html += `<strong>${site.name}</strong> — ${site.rationale}<br>`; });
-        if (filteredOutResults.length > 2) html += `<span style="color:var(--text-muted);font-size:0.85rem;">+ ${filteredOutResults.length - 2} more filtered out</span>`;
-        filteredExplanation.innerHTML = html;
-        filteredOut.classList.add('visible');
-      }
-      if (tomorrowCandidates.length > 0) {
-        tomorrowSection.classList.add('visible');
-        tomorrowList.innerHTML = tomorrowCandidates.map(site => `<div class="tomorrow-item"><span class="time">Opens ${site.tomorrowOpen}</span><span class="name">${site.name}</span><span class="eta">~${site.travelTime} min by ${parsed.transport}</span></div>`).join('');
-      }
-      plotResultsOnMap(todayResults);
-      if (todayResults.length === 0 && filteredOutResults.length === 0) {
-        resultsList.innerHTML = '';
-        showEmptyState('No food access sites found. Try a different location.');
-      }
     }
 
     function createCard(site, rank) {
