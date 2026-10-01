@@ -444,12 +444,13 @@
       for (const [key, loc] of Object.entries(namedLocations)) { if (q.includes(key)) { detectedName = loc.name; break; } }
 
       const now = new Date();
-      const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
-      let targetDay = now.getDay(), targetHour = now.getHours(), targetMin = now.getMinutes(), timeLabel = 'right now';
-      if (/\btomorrow\b/i.test(q) || when === 'tomorrow') { targetDay = (targetDay+1)%7; targetHour=9; targetMin=0; timeLabel='tomorrow morning'; }
-      else if (/\bmorning\b/i.test(q) || when === 'now') { targetHour=9; targetMin=0; timeLabel='this morning'; }
-      else if (/\bafternoon\b/i.test(q) || when === 'afternoon') { targetHour=14; targetMin=0; timeLabel='this afternoon'; }
-      else if (/\bevening\b/i.test(q) || when === 'evening') { targetHour=18; targetMin=0; timeLabel='this evening'; }
+            const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
+            let targetDay = now.getDay(), targetHour = now.getHours(), targetMin = now.getMinutes(), timeLabel = 'right now';
+            if (/\btomorrow\b/i.test(q) || when === 'tomorrow') { targetDay = (targetDay+1)%7; targetHour=9; targetMin=0; timeLabel='tomorrow morning'; }
+            else if (/\bmorning\b/i.test(q) || when === 'morning') { targetHour=9; targetMin=0; timeLabel='this morning'; }
+            else if (/\bafternoon\b/i.test(q) || when === 'afternoon') { targetHour=14; targetMin=0; timeLabel='this afternoon'; }
+            else if (/\bevening\b/i.test(q) || when === 'evening') { targetHour=18; targetMin=0; timeLabel='this evening'; }
+            // "now" uses actual current time (already set above)
 
       return { originalQuery: query || '(filters only)', transport, when, payment, location: userLocation, detectedName, targetDay, targetHour, targetMin, timeLabel };
     }
@@ -633,9 +634,9 @@
             </div>
           </div>
           <div class="card-actions">
-            <a class="btn-action btn-directions" href="${buildGoogleMapsUrl(site, transportMode, 'directions')}" target="_blank" data-id="${site.id}">🧭 Directions</a>
-            <a class="btn-action btn-detail" href="${buildGoogleMapsUrl(site, transportMode, 'detail')}" target="_blank" data-id="${site.id}">🔍 Detail</a>
-          </div>
+                      <a class="btn-action btn-directions" href="${buildGoogleMapsUrl(site, transportMode, 'directions')}" target="_blank" data-id="${site.id}">🧭 Directions</a>
+                      <a class="btn-action btn-detail" href="${buildGoogleMapsUrl(site, transportMode, 'detail')}" target="_blank" data-id="${site.id}">📍 Place Info</a>
+                    </div>
         </article>`;
     }
 
