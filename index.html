@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fresh Route — Ask Naturally. Get There Relibly.</title>
+  <title>Fresh Route — Ask Naturally. Get There Reliably.</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root {
@@ -31,9 +31,20 @@
     #submit-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; font-family: inherit; }
     #submit-btn:hover { background: var(--accent-dark); }
     #submit-btn:disabled { background: #c4b5a5; cursor: not-allowed; }
-    .suggestion-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-    .chip { padding: 8px 14px; background: #f0ece4; color: var(--accent-dark); border: 1px solid #e0d8cc; border-radius: 20px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; font-family: inherit; }
-    .chip:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+    /* Filter grid - 3 rows, radio behavior per row */
+    .filter-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn {
+      flex: 1; min-width: 70px; padding: 10px 12px; background: #f0ece4; color: var(--accent-dark);
+      border: 1px solid #e0d8cc; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; font-family: inherit; text-align: center;
+    }
+    .filter-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+    .filter-btn.selected { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 2px 6px rgba(176,125,90,0.3); }
+    .filter-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    @media (max-width: 480px) { .filter-btn { flex: 1 0 45%; min-width: auto; } }
+
     .location-status { display: none; align-items: center; gap: 8px; padding: 10px 14px; background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: var(--radius-sm); margin-bottom: 12px; font-size: 0.9rem; color: var(--green); font-weight: 500; }
     .location-status.visible { display: flex; }
     .location-status .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
@@ -97,9 +108,8 @@
     .tomorrow-item .time { font-weight: 600; color: var(--accent-dark); min-width: 80px; }
     .tomorrow-item .name { font-weight: 500; flex: 1; }
     .tomorrow-item .eta { color: var(--text-muted); font-size: 0.85rem; }
-    .map-section { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; display: none; }
-    .map-section.visible { display: block; }
-    #map { height: 300px; width: 100%; border-radius: var(--radius-sm); z-index: 1; }
+    .map-section { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+    #map { height: 280px; width: 100%; border-radius: var(--radius-sm); z-index: 1; }
     .map-legend { padding: 10px 14px; font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 16px; flex-wrap: wrap; border-top: 1px solid #f0ece4; background: #faf8f4; }
     .map-legend .legend-item { display: flex; align-items: center; gap: 6px; }
     .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
@@ -137,23 +147,45 @@
       <p class="tagline">Ask naturally. Get there reliably.</p>
       <div class="accent-bar"></div>
     </header>
+
     <div class="location-status" id="location-status">
       <span class="dot"></span>
-      <span id="location-text">Using your current location</span>
+      <span id="location-text">Tap the map to set your location, or use GPS</span>
     </div>
+
     <div class="search-section">
       <div class="search-row">
-        <input type="text" id="user-input" placeholder="e.g., I don't have a car, I'm near Park Street, I need food today" autocomplete="off">
+        <input type="text" id="user-input" placeholder="e.g., I'm near Park Street, need food today" autocomplete="off">
         <button id="gps-btn" type="button"><span class="icon">📍</span> Use my location</button>
       </div>
       <button id="submit-btn" type="button">Find Food</button>
-      <div class="suggestion-chips">
-        <span class="chip" data-prompt="I don't have a car, I'm near Park Street, I need food today">No car, Park St, today</span>
-        <span class="chip" data-prompt="I have a car, I'm in West Hartford, need food now">Car, West Hartford, now</span>
-        <span class="chip" data-prompt="Walking distance from Asylum Ave, need food this afternoon">Walking, Asylum Ave, today</span>
-        <span class="chip" data-prompt="Bus from New Britain, need groceries tomorrow morning">Bus, New Britain, tomorrow</span>
+
+      <!-- Filter grid: 3 rows, one selection per row -->
+      <div class="filter-grid" role="group" aria-label="Search filters">
+        <!-- Row 1: Transport -->
+        <div class="filter-row" role="radiogroup" aria-label="Transportation">
+          <button type="button" class="filter-btn" data-filter="transport" data-value="walking" aria-pressed="true">🚶 Walk</button>
+          <button type="button" class="filter-btn selected" data-filter="transport" data-value="bike" aria-pressed="false">🚲 Bike</button>
+          <button type="button" class="filter-btn" data-filter="transport" data-value="bus" aria-pressed="false">🚌 Bus</button>
+          <button type="button" class="filter-btn" data-filter="transport" data-value="car" aria-pressed="false">🚗 Car</button>
+        </div>
+        <!-- Row 2: When -->
+        <div class="filter-row" role="radiogroup" aria-label="When">
+          <button type="button" class="filter-btn selected" data-filter="when" data-value="now" aria-pressed="true">Now</button>
+          <button type="button" class="filter-btn" data-filter="when" data-value="afternoon" aria-pressed="false">Afternoon</button>
+          <button type="button" class="filter-btn" data-filter="when" data-value="evening" aria-pressed="false">Evening</button>
+          <button type="button" class="filter-btn" data-filter="when" data-value="tomorrow" aria-pressed="false">Tomorrow</button>
+        </div>
+        <!-- Row 3: Payment/Access -->
+        <div class="filter-row" role="radiogroup" aria-label="Payment or access type">
+          <button type="button" class="filter-btn selected" data-filter="payment" data-value="cash" aria-pressed="true">💵 Cash</button>
+          <button type="button" class="filter-btn" data-filter="payment" data-value="card" aria-pressed="false">💳 Card</button>
+          <button type="button" class="filter-btn" data-filter="payment" data-value="debit" aria-pressed="false">🏦 Debit</button>
+          <button type="button" class="filter-btn" data-filter="payment" data-value="snap" aria-pressed="false">🟢 SNAP/EBT</button>
+        </div>
       </div>
     </div>
+
     <div class="parsed-confirm" id="parsed-confirm">
       <div class="label">I understood:</div>
       <div class="detail" id="parsed-detail"></div>
@@ -162,19 +194,25 @@
         <button class="btn-secondary" id="correct-btn">Let me rephrase</button>
       </div>
     </div>
+
     <div class="loading" id="loading"><div class="spinner"></div>Finding reachable options…</div>
+
     <div class="filtered-out" id="filtered-out">
       <div class="label">Filtered out</div>
       <div class="explanation" id="filtered-explanation"></div>
     </div>
+
     <div class="results-area" id="results-area">
       <div class="summary-banner" id="summary-banner"></div>
       <div class="results-list" id="results-list"></div>
     </div>
+
     <div class="tomorrow-section" id="tomorrow-section">
       <div class="tomorrow-label">Tomorrow / Plan Ahead</div>
       <div class="tomorrow-list" id="tomorrow-list"></div>
     </div>
+
+    <!-- Map visible from the start for location tapping -->
     <div class="map-section" id="map-section">
       <div id="map"></div>
       <div class="map-legend">
@@ -184,16 +222,19 @@
         <span class="legend-item"><span class="legend-dot low"></span> Call first (30–59)</span>
       </div>
     </div>
+
     <div class="empty-state" id="empty-state" style="display:none;">
       <h3>No location set</h3>
       <p>Use your GPS or tap the map to set your starting point, then search.</p>
     </div>
+
     <footer>
       Fresh Route — Hack for Humanity 2026<br>
       Data: Foodshare, 211 CT, CTtransit GTFS, USDA Food Access Research Atlas, OSM<br>
       <a href="https://github.com/davidaripper/hackathon-DAR-Solution" target="_blank">View on GitHub</a>
     </footer>
   </div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module">
     let sites = [];
@@ -201,6 +242,11 @@
     let map = null;
     let userMarker = null;
     let routeLine = null;
+    let siteMarkers = [];
+
+    // Filter state
+    let currentFilters = { transport: 'bike', when: 'now', payment: 'cash' };
+
     const input = document.getElementById('user-input');
     const submitBtn = document.getElementById('submit-btn');
     const gpsBtn = document.getElementById('gps-btn');
@@ -220,6 +266,23 @@
     const tomorrowList = document.getElementById('tomorrow-list');
     const mapSection = document.getElementById('map-section');
     const emptyState = document.getElementById('empty-state');
+
+    // Filter button handling
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.dataset.filter;
+        const value = btn.dataset.value;
+        // Deselect siblings in same row
+        btn.closest('.filter-row').querySelectorAll('.filter-btn').forEach(b => {
+          b.classList.remove('selected');
+          b.setAttribute('aria-pressed', 'false');
+        });
+        // Select this one
+        btn.classList.add('selected');
+        btn.setAttribute('aria-pressed', 'true');
+        currentFilters[filter] = value;
+      });
+    });
 
     async function loadSites() {
       try { const resp = await fetch('./data/sites.json'); sites = await resp.json(); }
@@ -288,7 +351,6 @@
 
     submitBtn.addEventListener('click', handleSubmit);
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSubmit(); });
-    document.querySelectorAll('.chip').forEach(chip => { chip.addEventListener('click', () => { input.value = chip.dataset.prompt; input.focus(); }); });
 
     function handleSubmit() {
       const query = input.value.trim();
@@ -307,9 +369,18 @@
 
     function parseQuery(query) {
       const q = query.toLowerCase();
-      let transport = 'walking';
+      // Start with filter selections, but allow text to override
+      let transport = currentFilters.transport;
+      let when = currentFilters.when;
+      let payment = currentFilters.payment;
+
+      // Text overrides for transport
       if (/\bcar\b|\bdrive\b|\bvehicle\b|i have a car/i.test(q)) transport = 'car';
       else if (/\bbus\b|\btransit\b|\bpublic\b|take the\s+/i.test(q)) transport = 'bus';
+      else if (/\bwalk\b|\bwalking\b/i.test(q)) transport = 'walking';
+      else if (/\bbike\b|\bbicycle\b/i.test(q)) transport = 'bike';
+
+      // Named locations
       const namedLocations = {
         'park street': { lat: 41.7578, lng: -72.6734, name: 'Park Street' },
         'asylum': { lat: 41.7694, lng: -72.6923, name: 'Asylum Ave' },
@@ -327,19 +398,24 @@
       };
       let detectedName = null;
       for (const [key, loc] of Object.entries(namedLocations)) { if (q.includes(key)) { detectedName = loc.name; break; } }
+
+      // Time overrides
       const now = new Date();
       const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
       let targetDay = now.getDay(), targetHour = now.getHours(), targetMin = now.getMinutes(), timeLabel = 'right now';
-      if (/\btomorrow\b/i.test(q)) { targetDay = (targetDay+1)%7; targetHour=9; targetMin=0; timeLabel='tomorrow morning'; }
-      else if (/\bmorning\b/i.test(q)) { targetHour=9; targetMin=0; timeLabel='this morning'; }
-      else if (/\bafternoon\b/i.test(q)) { targetHour=14; targetMin=0; timeLabel='this afternoon'; }
-      else if (/\bevening\b/i.test(q)) { targetHour=18; targetMin=0; timeLabel='this evening'; }
-      return { originalQuery: query, transport, location: userLocation, detectedName, targetDay, targetHour, targetMin, timeLabel };
+      if (/\btomorrow\b/i.test(q) || when === 'tomorrow') { targetDay = (targetDay+1)%7; targetHour=9; targetMin=0; timeLabel='tomorrow morning'; }
+      else if (/\bmorning\b/i.test(q) || when === 'now') { targetHour=9; targetMin=0; timeLabel='this morning'; }
+      else if (/\bafternoon\b/i.test(q) || when === 'afternoon') { targetHour=14; targetMin=0; timeLabel='this afternoon'; }
+      else if (/\bevening\b/i.test(q) || when === 'evening') { targetHour=18; targetMin=0; timeLabel='this evening'; }
+
+      return { originalQuery: query, transport, when, payment, location: userLocation, detectedName, targetDay, targetHour, targetMin, timeLabel };
     }
 
     function showParsed(parsed) {
-      const labels = { car: '🚗 Driving', bus: '🚌 Bus/Transit', walking: '🚶 Walking' };
-      parsedDetail.innerHTML = `<strong>Location:</strong> ${parsed.detectedName || 'Your current location'}<br><strong>Transport:</strong> ${labels[parsed.transport]}<br><strong>When:</strong> ${parsed.timeLabel}`;
+      const transportLabels = { car: '🚗 Driving', bus: '🚌 Bus/Transit', walking: '🚶 Walking', bike: '🚲 Bike' };
+      const whenLabels = { now: 'Right now', morning: 'This morning', afternoon: 'This afternoon', evening: 'This evening', tomorrow: 'Tomorrow morning' };
+      const paymentLabels = { cash: 'Cash', card: 'Credit card', debit: 'Debit', snap: 'SNAP/EBT' };
+      parsedDetail.innerHTML = `<strong>Location:</strong> ${parsed.detectedName || 'Your current location'}<br><strong>Transport:</strong> ${transportLabels[parsed.transport]}<br><strong>When:</strong> ${whenLabels[parsed.when]}<br><strong>Payment/Access:</strong> ${paymentLabels[parsed.payment]}`;
       parsedConfirm.classList.add('visible');
     }
 
@@ -348,8 +424,8 @@
       loading.classList.add('visible');
       resultsArea.classList.remove('visible');
       tomorrowSection.classList.remove('visible');
-      mapSection.classList.remove('visible');
       filteredOut.classList.remove('visible');
+      // Map stays visible; we just update markers
       await new Promise(r => setTimeout(r, 600));
       const { todayResults, filteredOutResults, tomorrowCandidates } = rankAndScore(sites, parsed);
       loading.classList.remove('visible');
@@ -366,6 +442,7 @@
         let travelTime;
         if (parsed.transport === 'car') travelTime = Math.max(5, Math.round(dist * 2.5));
         else if (parsed.transport === 'bus') travelTime = Math.max(10, Math.round(dist * 8));
+        else if (parsed.transport === 'bike') travelTime = Math.max(5, Math.round(dist * 5));
         else travelTime = Math.max(15, Math.round(dist * 20));
         const scoreResult = calculateScore(site, targetDayKey, targetMinutes, site.verified);
         const hoursToday = site.hours[targetDayKey];
@@ -438,9 +515,7 @@
         tomorrowSection.classList.add('visible');
         tomorrowList.innerHTML = tomorrowCandidates.map(site => `<div class="tomorrow-item"><span class="time">Opens ${site.tomorrowOpen}</span><span class="name">${site.name}</span><span class="eta">~${site.travelTime} min by ${parsed.transport}</span></div>`).join('');
       }
-      initMap();
       plotResultsOnMap(todayResults);
-      mapSection.classList.add('visible');
       if (todayResults.length === 0 && filteredOutResults.length === 0) {
         resultsList.innerHTML = '';
         showEmptyState('No food access sites found. Try a different location.');
@@ -475,7 +550,7 @@
     }
 
     function buildGoogleMapsUrl(site, transportMode, mode) {
-      const travelModeMap = { car: 'driving', bus: 'transit', walking: 'walking' };
+      const travelModeMap = { car: 'driving', bus: 'transit', walking: 'walking', bike: 'bicycling' };
       const gmode = travelModeMap[transportMode] || 'walking';
       const coords = `${site.lat},${site.lng}`;
       if (mode === 'directions') return `https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=${gmode}`;
@@ -485,7 +560,11 @@
     function launchGoogleMaps(site, transportMode, mode) { window.open(buildGoogleMapsUrl(site, transportMode, mode), '_blank'); }
 
     function plotResultsOnMap(todayResults) {
-      const siteMarkers = [];
+      // Clear previous site markers
+      siteMarkers.forEach(({ marker }) => map.removeLayer(marker));
+      siteMarkers = [];
+      if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+
       todayResults.forEach(site => {
         const color = site.score >= 90 ? '#2d6a4f' : site.score >= 60 ? '#c9a227' : site.score >= 30 ? '#c46a3d' : '#8a8580';
         const marker = L.circleMarker([site.lat, site.lng], { radius: 10, color, fillColor: color, fillOpacity: 0.85, weight: 2, opacity: 1 }).addTo(map);
@@ -531,7 +610,6 @@
     function showEmptyState(msg) {
       resultsArea.classList.remove('visible');
       tomorrowSection.classList.remove('visible');
-      mapSection.classList.remove('visible');
       filteredOut.classList.remove('visible');
       emptyState.style.display = 'block';
       emptyState.querySelector('h3').textContent = msg || 'No location set';
@@ -542,10 +620,10 @@
       loading.classList.remove('visible');
       resultsArea.classList.remove('visible');
       tomorrowSection.classList.remove('visible');
-      mapSection.classList.remove('visible');
       filteredOut.classList.remove('visible');
       parsedConfirm.classList.remove('visible');
       emptyState.style.display = 'none';
+      // Map stays visible
     }
 
     document.addEventListener('DOMContentLoaded', () => { initMap(); });
